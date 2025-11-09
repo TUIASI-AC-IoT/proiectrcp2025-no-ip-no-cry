@@ -2,8 +2,8 @@ Proiect Retele de Calculatoare
 
 Titlu: Implementare SNMP. Aplicatie demonstrativa.
 
-Dascalu Ioana-Felicia \n
-Aciocirlanoaei Georgiana \n
+Dascalu Ioana-Felicia  
+Aciocirlanoaei Georgiana  
 Grupa 1310A
 
 
