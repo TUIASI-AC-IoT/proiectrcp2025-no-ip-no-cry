@@ -1,54 +1,68 @@
+
+[SNMP-doc.pdf](https://github.com/user-attachments/files/23440129/SNMP-doc.pdf)
+
 Implementare SNMP .Aplicație demonstrativă
 Proiect la disciplina Rețele de Calculatoare
 Studenți : Aciocîrlănoaei Georgiana (1310A)
 Dascălu Ioana-Felicia (1310A)
+
+
 Simple Network Management Protocol (SNMP, ro. : “Protocolul Simplu de Administrare a Rețelei “) este un protocol de administrare standardizat Internet , conceput initial pentru gestionarea rețelelor TCP/IP .
 SNMP este un protocol implementat la nivel de aplicație ce folosește porturile UDP 161(SNMP Manager) și 162(SNMP Agent) . Acesta este utilizat în cadrul monitorizării rețelelor , administrării echipamentelor de rețea ( routere, switch-uri, servere, imprimante etc.), detectarea defecțiunilor de rețea , colectării informațiilor și configurarea dispozitivelor de la distanță .
-Arhitectura SNMP
+
+
+  Arhitectura SNMP
 Arhitectura SNMP se bazează pe un model Manager – Agent , împreună cu o bază de date numită MIB, și are la bază 3 elemente fundamentale :
-1. SNMP MANAGER
+  1. SNMP MANAGER
 Managerul SNMP , cunoscut și sub numele de NMS – Network Management Station ( Stație de Management a Rețelei ) , este o aplicație care generează cereri pentru informațiile din MIB , procesează răspunsurile primite și care rulează pe un PC sau Server. Un router care rulează programul de server SNMP este numit agent , în timp ce un sistem (host) care rulează programul client SNMP este numit manager .
-2. SNMP AGENT
+  2. SNMP AGENT
 Agentul SNMP este un modul software de management ce rulează pe un dispozitiv administrat . Managerul accesează valorile stocate în baza de date, în timp ce agentul menține informațiile din acesta . De exemplu, pentu a verifica dacă un router este congestionat(are un trafic excesiv ) sau nu, maganerul poate examina variabilele relevante pe care routerul le stochează, cum ar fi numărul de pachete primite și transmise.
 Un manager SNMP poate trimite cereri către un agent fie pentru a prelua informații din MIB-ul agentului (cerere SNMP Get), fie pentru a modifica informații din MIB (cerere SNMP Set). De asemenea, un agent SNMP poate trimite mesaje nesolicitate către managerul SNMP, numite SNMP traps.
-3. MIB (Management Information Base )
+  3. MIB (Management Information Base )
 MIB conține informații despre resursele care necesită administrate . Aceste informații sunt organizate ierarhic și constau din instanțele de obiecte, care sunt, în esență, variabile. MIB-ul, sau colecția de date de sub management-ul managerului, este unică pentru fiecare agent . MIB este împărțită în opt categorii : System, Interface, Address Translation, IP, UDP,ICMP , TCP .
 
-MIB-ul este scris în notația ASN.1 ( Abstract Syntax Notation 1).
-ASN.1 este o notație standard întreținută de ISO (Organizația Internațională pentru Standardizare) și utilizată în domenii variate, de la World Wide Web până la sisteme de control al aviației. Toată comunicația SNMP depinde de faptul că toate dispozitivele trebuie să înțeleagă mesajele SNMP, ceea ce ridică câteva probleme tehnice.
-Prima problemă apare deoarece diferitele limbaje de programare au seturi ușor diferite de tipuri de date (numere întregi, șiruri de caractere, octeți, caractere etc.).De exemplu, un manager SNMP care trimite un mesaj cu tipuri de date specifice Java poate să nu fie înțeles de un agent SNMP scris în C.
-Soluția: SNMP folosește ASN.1 (Abstract Syntax Notation One) pentru a defini tipurile de date utilizate în mesajele SNMP. Deoarece ASN.1 este independent de orice limbaj de programare, agenții și managerii SNMP pot fi scriși în orice limbaj.
-Totuși, chiar și folosind tipuri de date ASN.1 valide, apare o altă problemă: cum sunt codificate datele pentru transmisie? Șirurile trebuie terminate cu caracter nul, ca în C, sau nu? Valorile Boolean sunt pe 8 biți (C++) sau pe 16 biți (Visual Basic 6)?
-Rezolvarea: ASN.1 include Basic Encoding Rules (BER), care standardizează modul de codare a tuturor tipurilor de date înainte de a fi trimise pe rețea. Astfel, toate câmpurile unui mesaj SNMP trebuie să fie tipuri ASN.1 valide și codificate conform BER.
+  MIB-ul este scris în notația ASN.1 ( Abstract Syntax Notation 1).
+  ASN.1 este o notație standard întreținută de ISO (Organizația Internațională pentru Standardizare) și utilizată în domenii variate, de la World Wide Web până la sisteme de control al aviației. Toată comunicația SNMP depinde de faptul că toate dispozitivele trebuie să înțeleagă mesajele SNMP, ceea ce ridică câteva probleme tehnice.
+  Prima problemă apare deoarece diferitele limbaje de programare au seturi ușor diferite de tipuri de date (numere întregi, șiruri de caractere, octeți, caractere etc.).De exemplu, un manager SNMP care trimite un mesaj cu tipuri de date specifice Java poate să nu fie înțeles de un agent SNMP scris în C.
+  Soluția: SNMP folosește ASN.1 (Abstract Syntax Notation One) pentru a defini tipurile de date utilizate în mesajele SNMP. Deoarece ASN.1 este independent de orice limbaj de programare, agenții și managerii SNMP pot fi scriși în orice limbaj.
+  Totuși, chiar și folosind tipuri de date ASN.1 valide, apare o altă problemă: cum sunt codificate datele pentru transmisie? Șirurile trebuie terminate cu caracter nul, ca în C, sau nu? Valorile Boolean sunt pe 8 biți (C++) sau pe 16 biți (Visual Basic 6)?
+  Rezolvarea: ASN.1 include Basic Encoding Rules (BER), care standardizează modul de codare a tuturor tipurilor de date înainte de a fi trimise pe rețea. Astfel, toate câmpurile unui mesaj SNMP trebuie să fie tipuri ASN.1 valide și codificate conform BER.
+
 Pentru a construi un mesaj SNMP, programatorul trebuie să înțeleagă tipurile de date ASN.1, care se împart în două categorii:
 1. Tipuri primitive:
-o Integer (număr întreg)
-o Octet String (șir de octeți/caractere)
-o Null
-o Boolean
-o Object Identifier (OID) – central pentru SNMP, deoarece OID identifică parametrul adresat în agent.
+  o Integer (număr întreg)
+  o Octet String (șir de octeți/caractere)
+  o Null
+  o Boolean
+  o Object Identifier (OID) – central pentru SNMP, deoarece OID identifică parametrul adresat în agent.
 2. Tipuri complexe: ASN.1 permite gruparea tipurilor primitive în tipuri complexe, pentru organizarea datelor. Exemple:
-o Sequence: o listă de câmpuri, fiecare cu tip diferit.
-o PDU (Protocol Data Unit): tipuri complexe specifice SNMP, care conțin corpul mesajului SNMP. Exemple: GetRequest și SetRequest, pentru citirea și scrierea parametrilor.
+  o Sequence: o listă de câmpuri, fiecare cu tip diferit.
+  o PDU (Protocol Data Unit): tipuri complexe specifice SNMP, care conțin corpul mesajului SNMP. Exemple: GetRequest și SetRequest, pentru citirea și scrierea parametrilor.
+
+
 Un mesaj SNMP este, în final, o structură formată complet din câmpuri ASN.1.
-Scopul principal al unui mesaj SNMP este de a controla (set) sau de a monitoriza (get) parametrii unui agent SNMP. În SNMP, un parametru reprezintă o instanță a unui obiect definit într-un mod general în cadrul MIB-ului (Management Information Base). Un obiect SNMP poate avea una sau mai multe instanțe, în funcție de structura și tipul resursei monitorizate. Managerul SNMP poate obține sau modifica valoarea fiecărei instanțe gestionate de agent.
-În cadrul unui agent SNMP, obiectele și parametrii monitorizați sunt organizați sub forma unui arbore ierarhic. Pentru identificarea exactă a fiecărui element din acest arbore, SNMP folosește Object Identifier-uri (OID-uri).
+  Scopul principal al unui mesaj SNMP este de a controla (set) sau de a monitoriza (get) parametrii unui agent SNMP. În SNMP, un parametru reprezintă o instanță a unui obiect definit într-un mod general în cadrul MIB-ului (Management Information Base). Un obiect SNMP poate avea una sau mai multe instanțe, în funcție de structura și tipul resursei monitorizate. Managerul SNMP poate obține sau modifica valoarea fiecărei instanțe gestionate de agent.
+  În cadrul unui agent SNMP, obiectele și parametrii monitorizați sunt organizați sub forma unui arbore ierarhic. Pentru identificarea exactă a fiecărui element din acest arbore, SNMP folosește Object Identifier-uri (OID-uri).
 Object Identifier (OID)
-Un Object Identifier (OID) este o secvență numerică ce indică în mod unic poziția unui obiect sau a unei instanțe din arborele MIB. Structura sa este ierarhică, iar fiecare nivel al secvenței reprezintă o ramură în arbore.
-Un OID este exprimat sub forma unei liste de numere separate prin puncte, de exemplu: 1.3.6.1.2.1.1.5.0 Această reprezentare numerică permite identificarea precisă a unui obiect, indiferent de platformă sau producător, deoarece OID-urile sunt definite și standardizate la nivel internațional .
-Structura ierarhică a OID-urilor
+  Un Object Identifier (OID) este o secvență numerică ce indică în mod unic poziția unui obiect sau a unei instanțe din arborele MIB. Structura sa este ierarhică, iar fiecare nivel al secvenței reprezintă o ramură în arbore.
+  Un OID este exprimat sub forma unei liste de numere separate prin puncte, de exemplu: 1.3.6.1.2.1.1.5.0 Această reprezentare numerică permite identificarea precisă a unui obiect, indiferent de platformă sau producător, deoarece OID-urile sunt definite și standardizate la nivel internațional .
+
+
+  Structura ierarhică a OID-urilor
 Arborele OID este organizat pe nivele ierarhice, pornind de la rădăcina globală. În mod uzual, ramura utilizată de SNMP pentru obiectele de management este:1.3.6.1 care corespunde lanțului: iso → org → dod → internet
 Sub această ramură se găsesc:
- .2.1 – OID-uri standard (MIB-II);
- .4.1 – OID-uri pentru companii și implementări specifice ;
+   .2.1 – OID-uri standard (MIB-II);
+   .4.1 – OID-uri pentru companii și implementări specifice ;
 Prin această ierarhie, este asigurată:
- unicitatea globală a fiecărui parametru monitorizat
- compatibilitatea între sisteme diferite
- extensibilitatea pentru implementări personalizate
-Rolul OID-urilor în SNMP
+   unicitatea globală a fiecărui parametru monitorizat
+   compatibilitatea între sisteme diferite
+   extensibilitatea pentru implementări personalizate
+
+  
+  Rolul OID-urilor în SNMP
 În orice operație SNMP (GetRequest, GetNextRequest, SetRequest sau Trap), OID-ul identifică obiectul vizat de manager. În loc să transmită un nume textual, managerul folosește OID-ul numeric, garantând interpretarea corectă de către agent. De exemplu, pentru a solicita o anumită informație sistemică de la agent, managerul transmite un OID specific, iar agentul returnează valoarea asociată obiectului respectiv. Astfel, OID-ul reprezintă elementul fundamental prin care SNMP asigură o adresare standardizată și precisă a obiectelor monitorizate sau controlate într-un sistem gestionat la distanță.
 
-Mod de funcționare al SNMP
+  Mod de funcționare al SNMP
 Agenții software SNMP de pe dispozitivele și serviciile de rețea comunică cu un NMS ( Network Management System) pentru a trasnmite informații despre starea sistemului și modificările de configurare ). NMS-ul oferă o interfață unică prin care administratorii pot trimite comenzi și primi alerte automate .
 SNMP se bazează pe conceptul de MIB ( Management Information Base ) pentru a determina modul în care sunt transmise și schimbate informațiile despre metricele dispozitivelor . MIB-ul reprezintă o descriere formală a componentelor unui dispozitiv de rețea și a informațiilor sale de stare . MIB-urile pot fi create pentru orice dispozitiv din rețeaua Internet of Things ( IoT), inclusiv pentru camere video IP, vehicule, echipamente industrial sau medicale .
 SNMP utilizează o combinație de comunicații de tip pull și push între dispozitivele de rețea și NMS . Agentul SNMP, care se află împreună cu MIB-ul pe un dispozitiv de rețea, colectează în mod continuu informații despre stare . Totuși, el transmite informații către NMS doar la cerere sau atunci când un anumit parametru al rețelei depășește un prag predefinit, cunoscut sun numele de trap. Mesajele trap sunt, de obicei, trimise către serverul de administrare atunci cand apare un eveniment semnificativ, cum ar fi o eroare critică .
@@ -59,7 +73,7 @@ SNMP este denumit „simplu” datorită naturii sale necomplicate. El poate exe
 Fiind unul dintre cele mai utilizate protocoale, SNMP este compatibil cu o gamă largă de echipamente hardware — de la echipamente tradiționale de rețea (routere, switch-uri, puncte de acces wireless) până la dispozitive finale, cum ar fi imprimante, scanere și dispozitive IoT.
 
 
-Versiunile SNMP
+  Versiunile SNMP
 1. SNMPv1 (cea pe care o vom dezvolta în cadrul proiectului propus)
 ->Această versiunile se concentrează pe ușurința utilizării și pe o configurație simplă. Totuși, în comparație cu versiunile ulterioare, a avut capacități și mecanisme de securitate limitate ;
 ->Schimbul de date între dispozitivele conectate și sistemul central de management era autentificat doar cu o parolă necriptată, cunoscută sub numele de community string, iar orice persoană cu acces la rețea o putea vedea ;
@@ -72,7 +86,7 @@ Versiunile SNMP
 ->Versiunea 3 oferă și criptare, prin care mesajele SNMP sunt „amestecate”, astfel încât utilizatorii neautorizați să nu le poată citi ;
 ->Această versiune necesită o configurare mai complexă pentru a activa măsurile suplimentare de securitate. De asemenea, are nevoie de mai multe resurse, crescând utilizarea de procesare și memorie.
 
-Comenzi SNMP
+  Comenzi SNMP
 SNMP poate efectua o varietate de funcții, folosind o combinație de comunicații de tip „push” și „pull” între dispozitivele de rețea și sistemul de administrare. Aceste funcții includ trimiterea de comenzi de citire/scriere și furnizarea de informații actualizate despre lățimea de bandă, puterea de procesare , utilizarea memoriei etc..
 GET request: Managerul SNMP generează și trimite această comandă către un agent pentru a obține valoarea unei variabile, identificată prin OID-ul său dintr-un MIB.
 GETNEXT request: Managerul SNMP trimite această comandă către agent pentru a prelua valorile următorului OID din ierarhia MIB-ului.
@@ -85,7 +99,7 @@ TRAP: Agentul trimite această comandă către manager ca alertă asincronă, in
 
 
 
-PROIECTAREA APLICAȚIEI
+                    PROIECTAREA APLICAȚIEI
 1. Introducere
 Proiectul realizat își propune să demonstreze principiile de funcționare ale protocolului SNMPv1 (Simple Network Management Protocol) prin implementarea unei aplicații complete, formată dintr-un agent SNMP și un manager SNMP, utilizând exclusiv modulul socket pentru comunicația în rețea:
 Agent SNMP – rulează pe sistemul monitorizat, colectează informații despre resurse și le expune printr-un MIB intern;
@@ -105,14 +119,15 @@ Programarea cu socket-uri începe prin importarea bibliotecii socket și crearea
 
 
 
-2. Motivația proiectului
+  2. Motivația proiectului
 Monitorizarea sistemelor și gestionarea eficientă a resurselor reprezintă elemente esențiale în administrarea rețelelor . SNMP este unul dintre cele mai utilizate protocoale în acest domeniu, fiind implementat în routere, servere, switch-uri, echipamente de telecomunicații și multe alte dispozitive inteligente.
 Proiectul nostru urmărește familiarizarea cu funcționarea concretă a SNMP prin dezvoltarea unei aplicații de la zero, pentru înțelegerea următoarelor elemente :
 - Codificarea și transmiterea pachetelor SNMP prin rețea ;
 - Structurarea MIB-urilor, OID-urilor ;
 - Rolul mesajelor specifice SNMPv1 (Get, GetNext, Set, Response, Trap);
 - Interacțiunea dintre un manager și mai mulți agenți .
-3. Obiectivele proiectului
+  
+  3. Obiectivele proiectului
 Proiectul nostru își propune realizarea unei aplicații demonstrative SNMP funcționale formată dintr-un agent SNMP și un manager SNMP , care evidențiază modul de monitorizare și administrare a resurselor unui sistem într-o rețea locală .
 Pentru a ilustra practic funcționarea protocolului, demonstrarea proiectului va fi realizată pe două laptopuri conectate în aceeași rețea, unul acționând ca manager, dar și ca agent, și celălalt ca agent .
 Agent SNMP ( script Python )
