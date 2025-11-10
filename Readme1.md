@@ -1,7 +1,7 @@
 
 [SNMP-doc.pdf](https://github.com/user-attachments/files/23440129/SNMP-doc.pdf)
 
-Implementare SNMP. Aplicație demonstrativă
+#Implementare SNMP. Aplicație demonstrativă
 Proiect la disciplina Rețele de Calculatoare
 Studenți: Aciocîrlănoaei Georgiana (1310A)
 Dascălu Ioana-Felicia (1310A)
