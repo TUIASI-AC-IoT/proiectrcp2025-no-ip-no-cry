@@ -75,25 +75,25 @@ Prin această ierarhie, este asigurată:
 
       Versiunile SNMP
   1. SNMPv1 (cea pe care o vom dezvolta în cadrul proiectului propus)
-->Această versiunile se concentrează pe ușurința utilizării și pe o configurație simplă. Totuși, în comparație cu versiunile ulterioare, a avut capacități și mecanisme de securitate limitate ;
-->Schimbul de date între dispozitivele conectate și sistemul central de management era autentificat doar cu o parolă necriptată, cunoscută sub numele de community string, iar orice persoană cu acces la rețea o putea vedea ;
+  ->Această versiunile se concentrează pe ușurința utilizării și pe o configurație simplă. Totuși, în comparație cu versiunile ulterioare, a avut capacități și mecanisme de securitate limitate ;
+  ->Schimbul de date între dispozitivele conectate și sistemul central de management era autentificat doar cu o parolă necriptată, cunoscută sub numele de community string, iar orice persoană cu acces la rețea o putea vedea ;
   2.SNMPv2
-->Acesta a oferit mai multe funcționalități decât versiunea 1, însă a păstrat același mecanism slab de autenfiticare;
-->Pe partea pozitivă, SNMPv2c poate trimite cantități mai mari de date mai rapid și a introdus un nou tip de comunicare numit inform;
--> În timp ce mesajele trap informau sistemul de management despre o eroare sau o problemă, mesajele inform permiteau managerului SNMP să confirme primirea mesajului trimis de agent. Agentul continua să retrimită mesajul inform până când primea un răspuns de la manager;
+  ->Acesta a oferit mai multe funcționalități decât versiunea 1, însă a păstrat același mecanism slab de autenfiticare;
+  ->Pe partea pozitivă, SNMPv2c poate trimite cantități mai mari de date mai rapid și a introdus un nou tip de comunicare numit inform;
+  -> În timp ce mesajele trap informau sistemul de management despre o eroare sau o problemă, mesajele inform permiteau managerului SNMP să confirme primirea mesajului trimis de agent. Agentul continua să retrimită mesajul inform până când primea un răspuns de la manager;
   3.SNMPv3
--> Oferă cel mai ridicat nivel de securitate, având mecanisme îmbunătățite care se asigură că doar utilizatorii autorizați pot vizualiza mesajele SNMP;
-->Versiunea 3 oferă și criptare, prin care mesajele SNMP sunt „amestecate”, astfel încât utilizatorii neautorizați să nu le poată citi ;
-->Această versiune necesită o configurare mai complexă pentru a activa măsurile suplimentare de securitate. De asemenea, are nevoie de mai multe resurse, crescând utilizarea de procesare și memorie.
+  -> Oferă cel mai ridicat nivel de securitate, având mecanisme îmbunătățite care se asigură că doar utilizatorii autorizați pot vizualiza mesajele SNMP;
+  ->Versiunea 3 oferă și criptare, prin care mesajele SNMP sunt „amestecate”, astfel încât utilizatorii neautorizați să nu le poată citi ;
+  ->Această versiune necesită o configurare mai complexă pentru a activa măsurile suplimentare de securitate. De asemenea, are nevoie de mai multe resurse, crescând utilizarea de procesare și memorie.
 
           Comenzi SNMP
   SNMP poate efectua o varietate de funcții, folosind o combinație de comunicații de tip „push” și „pull” între dispozitivele de rețea și sistemul de administrare. Aceste funcții includ trimiterea de comenzi de citire/scriere și furnizarea de informații actualizate despre lățimea de bandă, puterea de procesare , utilizarea memoriei etc..
-GET request: Managerul SNMP generează și trimite această comandă către un agent pentru a obține valoarea unei variabile, identificată prin OID-ul său dintr-un MIB.
-GETNEXT request: Managerul SNMP trimite această comandă către agent pentru a prelua valorile următorului OID din ierarhia MIB-ului.
-INFORM request: Este o alertă asincronă, similară cu un mesaj trap, dar necesită confirmarea primirii de către SNMP.
-RESPONSE: Agentul trimite această comandă către managerul SNMP ca răspuns la un GET request, GETNEXT request sau SET request. Conține valorile variabilelor solicitate.
-SET request: Managerul SNMP trimite această comandă către agent pentru a efectua configurări sau comenzi.
-TRAP: Agentul trimite această comandă către manager ca alertă asincronă, indicând că a avut loc un eveniment semnificativ, cum ar fi o eroare sau o defecțiune.
+  GET request: Managerul SNMP generează și trimite această comandă către un agent pentru a obține valoarea unei variabile, identificată prin OID-ul său dintr-un MIB.
+  GETNEXT request: Managerul SNMP trimite această comandă către agent pentru a prelua valorile următorului OID din ierarhia MIB-ului.
+  INFORM request: Este o alertă asincronă, similară cu un mesaj trap, dar necesită confirmarea primirii de către SNMP.
+  RESPONSE: Agentul trimite această comandă către managerul SNMP ca răspuns la un GET request, GETNEXT request sau SET request. Conține valorile variabilelor solicitate.
+  SET request: Managerul SNMP trimite această comandă către agent pentru a efectua configurări sau comenzi.
+  TRAP: Agentul trimite această comandă către manager ca alertă asincronă, indicând că a avut loc un eveniment semnificativ, cum ar fi o eroare sau o defecțiune.
 
 
 
