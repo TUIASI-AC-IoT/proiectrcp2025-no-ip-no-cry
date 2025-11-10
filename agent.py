@@ -14,7 +14,7 @@ except ValueError:
     sys.exit(1)
 
 #configurarea adresei agentului
-AGENT_ADDR = ('127.0.0.1', AGENT_PORT)
+AGENT_ADDR = ('192.168.60.49', AGENT_PORT)
 
 #crearea socket-ului UDP pentru agent
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
