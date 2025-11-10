@@ -23,7 +23,7 @@ else:
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 #setarea timpului de expirare pentru recvfrom
-agent_socket.settimeout(5.0)  #timeout de 5 secunde  
+agent_socket.settimeout(15.0)  #timeout de 5 secunde  
 
 #legarea socket-ului la adresa agentului
 try:
