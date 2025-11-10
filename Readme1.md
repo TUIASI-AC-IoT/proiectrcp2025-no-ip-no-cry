@@ -62,18 +62,23 @@ Prin această ierarhie, este asigurată:
   Rolul OID-urilor în SNMP
 În orice operație SNMP (GetRequest, GetNextRequest, SetRequest sau Trap), OID-ul identifică obiectul vizat de manager. În loc să transmită un nume textual, managerul folosește OID-ul numeric, garantând interpretarea corectă de către agent. De exemplu, pentru a solicita o anumită informație sistemică de la agent, managerul transmite un OID specific, iar agentul returnează valoarea asociată obiectului respectiv. Astfel, OID-ul reprezintă elementul fundamental prin care SNMP asigură o adresare standardizată și precisă a obiectelor monitorizate sau controlate într-un sistem gestionat la distanță.
 
-      Mod de funcționare al SNMP
-   Agenții software SNMP de pe dispozitivele și serviciile de rețea comunică cu un NMS ( Network Management System) pentru a trasnmite informații despre starea sistemului și modificările de configurare ). NMS-ul oferă o interfață unică prin care administratorii pot trimite comenzi și primi alerte automate .
-    SNMP se bazează pe conceptul de MIB ( Management Information Base ) pentru a determina modul în care sunt transmise și schimbate informațiile despre metricele dispozitivelor . MIB-ul reprezintă o descriere formală a componentelor unui dispozitiv de rețea și a informațiilor sale de stare . MIB-urile pot fi create pentru orice dispozitiv din rețeaua Internet of Things ( IoT), inclusiv pentru camere video IP, vehicule, echipamente industrial sau medicale .
+          Mod de funcționare al SNMP
+      Agenții software SNMP de pe dispozitivele și serviciile de rețea comunică cu un NMS ( Network Management System) pentru a trasnmite informații despre starea sistemului și modificările de configurare . NMS-ul oferă o interfață unică prin care administratorii pot trimite comenzi și primi alerte automate .
+          SNMP se bazează pe conceptul de MIB ( Management Information Base ) pentru a determina modul în care sunt transmise și schimbate informațiile despre metricele dispozitivelor . MIB-ul reprezintă o descriere formală a componentelor unui dispozitiv de rețea și a informațiilor sale de stare . MIB-urile pot fi create pentru orice dispozitiv din rețeaua Internet of Things ( IoT), inclusiv pentru camere video IP, vehicule, echipamente industrial sau medicale .
+
       SNMP utilizează o combinație de comunicații de tip pull și push între dispozitivele de rețea și NMS . Agentul SNMP, care se află împreună cu MIB-ul pe un dispozitiv de rețea, colectează în mod continuu informații despre stare . Totuși, el transmite informații către NMS doar la cerere sau atunci când un anumit parametru al rețelei depășește un prag predefinit, cunoscut sun numele de trap. Mesajele trap sunt, de obicei, trimise către serverul de administrare atunci cand apare un eveniment semnificativ, cum ar fi o eroare critică .
-    SNMP include și un tip de mesaj numit inform , care permite unui instrument de monitorizare a rețelei să confirme primirea unui mesaj de la un dispozitiv.     Mesajele inform îi permit agentului să reseteze o alertă declanșată .
-    Instrumentele de administrare a rețelei pot folosi un mesaj de tip set pentru a modifica un dispozitiv de rețea prin intermediul agentului SNMP. Aceste mesaje predefinite permit, de asemenea, administratorului să schimbe configurațiile dispozitivelor ca răspuns la evenimente noi din rețea.
-    În majoritatea cazurilor, SNMP funcționează într-un model sincron: managerul SNMP inițiază comunicarea, iar agentul răspunde. De obicei, SNMP folosește User Datagram Protocol (UDP) ca protocol de transport. Porturile UDP bine cunoscute pentru traficul SNMP sunt 161 (SNMP) și 162 (SNMPTRAP). Aceste două porturi sunt valori implicite standard, identice în toate versiunile SNMP.
-    SNMP este denumit „simplu” datorită naturii sale necomplicate. El poate executa comenzi de citire/scriere, cum ar fi resetarea unei parole sau modificarea unei setări de configurare, și poate raporta cantitatea de lățime de bandă, putere de procesare și memorie utilizată.
+
+         SNMP include și un tip de mesaj numit inform , care permite unui instrument de monitorizare a rețelei să confirme primirea unui mesaj de la un dispozitiv.     Mesajele inform îi permit agentului să reseteze o alertă declanșată .
+
+          Instrumentele de administrare a rețelei pot folosi un mesaj de tip set pentru a modifica un dispozitiv de rețea prin intermediul agentului SNMP. Aceste mesaje predefinite permit, de asemenea, administratorului să schimbe configurațiile dispozitivelor ca răspuns la evenimente noi din rețea.
+
+        În majoritatea cazurilor, SNMP funcționează într-un model sincron: managerul SNMP inițiază comunicarea, iar agentul răspunde. De obicei, SNMP folosește User Datagram Protocol (UDP) ca protocol de transport. Porturile UDP bine cunoscute pentru traficul SNMP sunt 161 (SNMP) și 162 (SNMPTRAP). Aceste două porturi sunt valori implicite standard, identice în toate versiunile SNMP.
+
+        SNMP este denumit „simplu” datorită naturii sale necomplicate. El poate executa comenzi de citire/scriere, cum ar fi resetarea unei parole sau modificarea unei setări de configurare, și poate raporta cantitatea de lățime de bandă, putere de procesare și memorie utilizată.
     Fiind unul dintre cele mai utilizate protocoale, SNMP este compatibil cu o gamă largă de echipamente hardware — de la echipamente tradiționale de rețea (routere, switch-uri, puncte de acces wireless) până la dispozitive finale, cum ar fi imprimante, scanere și dispozitive IoT.
 
 
-      Versiunile SNMP
+             Versiunile SNMP
   1. SNMPv1 (cea pe care o vom dezvolta în cadrul proiectului propus)
   ->Această versiunile se concentrează pe ușurința utilizării și pe o configurație simplă. Totuși, în comparație cu versiunile ulterioare, a avut capacități și mecanisme de securitate limitate ;
   ->Schimbul de date între dispozitivele conectate și sistemul central de management era autentificat doar cu o parolă necriptată, cunoscută sub numele de community string, iar orice persoană cu acces la rețea o putea vedea ;
@@ -107,7 +112,7 @@ Manager SNMP – rulează pe un alt sistem din rețea și interacționează cu u
 Scopul proiectului este de a evidenția modul în care poate fi realizată monitorizarea și administrarea resurselor unui sistem de calcul utilizând mecanismele standardizate ale protocolului SNMP, implementate de la zero prin intermediul modulului socket, fără a apela la biblioteci externe dedicate SNMP.
 Programarea cu sockets este esențială pentru comunicațiile de rețea, permițând schimbul de date între diferite dispositive, fiind o metodă de a conecta două noduri într-o rețea pentru a comunica între ele .
 
-În Python, socket-urile permit comunicarea între procese (IPC) prin rețele.
+  În Python, socket-urile permit comunicarea între procese (IPC) prin rețele.
 Acest modul oferă un ghid complet pentru:
    Crearea de servere și clienți socket ;
    Gestionarea conexiunilor multiple ;
@@ -122,27 +127,27 @@ Programarea cu socket-uri începe prin importarea bibliotecii socket și crearea
 
       2. Motivația proiectului
   Monitorizarea sistemelor și gestionarea eficientă a resurselor reprezintă elemente esențiale în administrarea rețelelor . SNMP este unul dintre cele mai utilizate protocoale în acest domeniu, fiind implementat în routere, servere, switch-uri, echipamente de telecomunicații și multe alte dispozitive inteligente.
-Proiectul nostru urmărește familiarizarea cu funcționarea concretă a SNMP prin dezvoltarea unei aplicații de la zero, pentru înțelegerea următoarelor elemente :
-- Codificarea și transmiterea pachetelor SNMP prin rețea ;
-- Structurarea MIB-urilor, OID-urilor ;
-- Rolul mesajelor specifice SNMPv1 (Get, GetNext, Set, Response, Trap);
-- Interacțiunea dintre un manager și mai mulți agenți .
+  Proiectul nostru urmărește familiarizarea cu funcționarea concretă a SNMP prin dezvoltarea unei aplicații de la zero, pentru înțelegerea următoarelor elemente :
+  - Codificarea și transmiterea pachetelor SNMP prin rețea ;
+  - Structurarea MIB-urilor, OID-urilor ;
+  - Rolul mesajelor specifice SNMPv1 (Get, GetNext, Set, Response, Trap);
+  - Interacțiunea dintre un manager și mai mulți agenți .
   
       3. Obiectivele proiectului
   Proiectul nostru își propune realizarea unei aplicații demonstrative SNMP funcționale formată dintr-un agent SNMP și un manager SNMP , care evidențiază modul de monitorizare și administrare a resurselor unui sistem într-o rețea locală .
-Pentru a ilustra practic funcționarea protocolului, demonstrarea proiectului va fi realizată pe două laptop-uri conectate în aceeași rețea, unul acționând ca manager, dar și ca agent, și celălalt ca agent .
+       Pentru a ilustra practic funcționarea protocolului, demonstrarea proiectului va fi realizată pe două laptop-uriconectate în aceeași rețea, unul acționând ca manager, dar și ca agent, și celălalt ca agent .
       Agent SNMP ( script Python )
- Monitorizează cel puțin cinci resurse ale sistemului (ex: utilizare CPU, memorie, temperatură, spațiu pe disc etc.);
- Expune aceste resurse prin intermediul unor intrări MIB ce pot fi accesate de manager;
- Permite selectarea unităților de măsură pentru anumite resurse (ex: raportarea temperaturii în °C, °F sau K);
- Oferă posibilitatea configurării unor praguri de alertă pentru resursele monitorizate;
- La atingerea pragurilor configurate, agentul generează și transmite mesaje de tip Trap către manager.
+   Monitorizează cel puțin cinci resurse ale sistemului (ex: utilizare CPU, memorie, temperatură, spațiu pe disc etc.);
+   Expune aceste resurse prin intermediul unor intrări MIB ce pot fi accesate de manager;
+   Permite selectarea unităților de măsură pentru anumite resurse (ex: raportarea temperaturii în °C, °F sau K);
+   Oferă posibilitatea configurării unor praguri de alertă pentru resursele monitorizate;
+   La atingerea pragurilor configurate, agentul generează și transmite mesaje de tip Trap către manager.
       Manager SNMP ( script Python )
- Poate comunica simultan cu cel puțin două instanțe de agenți, fiecare rulând pe sisteme diferite, aflate în aceeași rețea locală;
- Permite interogarea manuală și setarea valorilor din MIB prin mesaje SNMP;
- Oferă funcția de actualizare automată a informațiilor la un interval de timp stabilit de utilizator;
- Afișează notificări în timp real pentru pachetele Trap primite;
- Include opțiuni pentru modificarea unităților de măsură utilizate de agenți în raportarea datelor.
+   Poate comunica simultan cu cel puțin două instanțe de agenți, fiecare rulând pe sisteme diferite, aflate în aceeași rețea locală;
+   Permite interogarea manuală și setarea valorilor din MIB prin mesaje SNMP;
+   Oferă funcția de actualizare automată a informațiilor la un interval de timp stabilit de utilizator;
+   Afișează notificări în timp real pentru pachetele Trap primite;
+   Include opțiuni pentru modificarea unităților de măsură utilizate de agenți în raportarea datelor.
 
 
 Ilustrații reprezentative pentru înțelegerea SNMP:
