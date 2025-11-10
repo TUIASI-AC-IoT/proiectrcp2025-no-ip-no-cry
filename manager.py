@@ -14,7 +14,7 @@ manager_socket.bind(('0.0.0.0', 0))         # OS-ul alege un port liber automat
 manager_socket.setblocking(False)           # asigura simultanietatea procesarii
 
 #afisarea portului local al managerului
-print(f"Managerul ascultă pe portul local: {manager_socket.getsockname()[1]}") 
+print(f"Managerul asculta pe portul local: {manager_socket.getsockname()[1]}") 
 
 #cererile catre agenti
 requests = {
@@ -32,7 +32,7 @@ timeout = 5.0 # Asteapta raspunsuri timp de 5 secunde
 responses_received = 0
 expected_responses = len(requests)
 
-print(f"\n[SELECT] Aștept răspunsuri de la cei {expected_responses} Agenți (timeout: {timeout}s)...")
+print(f"\n[SELECT] Astept raspunsuri de la cei {expected_responses} Agenti (timeout: {timeout}s)...")
 
 try:
     #cat timp nu am primit toate raspunsurile asteptate
@@ -49,15 +49,15 @@ try:
             data, addr = manager_socket.recvfrom(1024)
 
             #afisarea raspunsului primit
-            print(f"--- [RECV] Răspuns primit de la {addr} ---")
-            print(f"Răspuns: {data.decode()}")
+            print(f"--- [RECV] Raspuns primit de la {addr} ---")
+            print(f"Raspuns: {data.decode()}")
 
             #contorizarea raspunsurilor primite
             responses_received += 1
 
         else:
             #daca s-a atins timeout-ul, iesim din bucla
-            print("\nTimeout: Nu s-au primit toate răspunsurile la timp.")
+            print("\nTimeout: Nu s-au primit toate raspunsurile la timp.")
             break
 
 #exceptia pentru oprirea managerului cu Ctrl+C
