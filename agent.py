@@ -36,8 +36,9 @@ except OSError as e:
 print(f"Agentul asculta pe UDP {AGENT_ADDR}...")
 
 try:
-    while True:
-        try:
+    try:
+        while True:
+        
             #primirea cererii de la manager
             data, manager_addr = agent_socket.recvfrom(1024)
             
@@ -57,9 +58,9 @@ try:
             agent_socket.sendto(response_data, manager_addr)
             print(f"[SEND] Răspuns trimis către Manager.")
             
-        except socket.timeout:
-            #daca nu s-au primit cereri in timpul de asteptare
-            pass
+    except socket.timeout:
+        #daca nu s-au primit cereri in timpul de asteptare
+        pass
 
 #exceptia pentru oprirea agentului cu Ctrl+C
 except KeyboardInterrupt:
