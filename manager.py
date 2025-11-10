@@ -10,7 +10,7 @@ AGENT_2_ADDR = ('192.168.60.49', 12346)
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 #legarea socket-ului la o adresa locala
-manager_socket.bind(('0.0.0.0', 0))         # OS-ul alege un port liber automat
+manager_socket.bind(('192.168.60.49', 0))         # OS-ul alege un port liber automat
 manager_socket.setblocking(False)           # asigura simultanietatea procesarii
 
 #afisarea portului local al managerului
