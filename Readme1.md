@@ -130,7 +130,7 @@ Proiectul nostru urmărește familiarizarea cu funcționarea concretă a SNMP pr
   
       3. Obiectivele proiectului
   Proiectul nostru își propune realizarea unei aplicații demonstrative SNMP funcționale formată dintr-un agent SNMP și un manager SNMP , care evidențiază modul de monitorizare și administrare a resurselor unui sistem într-o rețea locală .
-Pentru a ilustra practic funcționarea protocolului, demonstrarea proiectului va fi realizată pe două laptopuri conectate în aceeași rețea, unul acționând ca manager, dar și ca agent, și celălalt ca agent .
+Pentru a ilustra practic funcționarea protocolului, demonstrarea proiectului va fi realizată pe două laptop-uri conectate în aceeași rețea, unul acționând ca manager, dar și ca agent, și celălalt ca agent .
       Agent SNMP ( script Python )
  Monitorizează cel puțin cinci resurse ale sistemului (ex: utilizare CPU, memorie, temperatură, spațiu pe disc etc.);
  Expune aceste resurse prin intermediul unor intrări MIB ce pot fi accesate de manager;
