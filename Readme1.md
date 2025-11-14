@@ -3,8 +3,7 @@
 ## Proiect la disciplina Rețele de Calculatoare 
 ## Studenți : Aciocîrlănoaei Georgiana  & Dascălu  Ioana-Felicia - 1310 A 
 
-
-   _Simple Network Management Protocol_ (SNMP, ro. : “Protocolul Simplu de Administrare a Rețelei “) este un protocol de administrare standardizat  Internet , conceput initial pentru gestionarea rețelelor TCP/IP .
+_Simple Network Management Protocol_ (SNMP, ro. : “Protocolul Simplu de Administrare a Rețelei “) este un protocol de administrare standardizat  Internet , conceput initial pentru gestionarea rețelelor TCP/IP .
   
   SNMP este un protocol implementat la nivel de aplicație ce folosește porturile _UDP 161(SNMP Manager- trimite request-uri către agent pe portul 161 – Get, GetNext, Set) și 162(SNMP Manager – pentru a primi traps sau inform messages de la agenți; agentul SNMP trimite Trap/Inform către manager pe portul 162)_ . Acesta este utilizat în cadrul monitorizării rețelelor , administrării echipamentelor de rețea ( routere, switch-uri, servere, imprimante etc.),  detectarea defecțiunilor de rețea , colectării informațiilor și configurarea dispozitivelor de la distanță.
       
@@ -12,11 +11,11 @@
   
    Arhitectura SNMP se bazează pe un model Manager – Agent , împreună cu o bază de date numită MIB ( nu este o bază de date clasică ce stochează date, ci doar descrie ce variabile există, de tip au, cum se accesează și ce semnificații au ), și are la bază 3 elemente fundamentale:
   
-**1.	SNMP MANAGER**
+**1.SNMP MANAGER**
 
    Managerul SNMP , cunoscut și sub numele de NMS – Network Management Station ( Stație de Management a Rețelei ) , este o aplicație care generează cereri pentru informațiile din MIB , procesează răspunsurile primite și care rulează pe un PC sau Server. Un router care rulează programul de server SNMP este numit agent , în timp ce un sistem (host) care rulează programul client SNMP este numit manager.
 
-**2.	SNMP AGENT**
+**2.SNMP AGENT**
 
   Agentul SNMP este un modul software de management ce rulează pe un dispozitiv administrat . Managerul accesează valorile stocate în baza de date, în timp ce agentul menține informațiile din acesta. De exemplu, pentu a verifica dacă un router este congestionat (are un trafic excesiv ) sau nu, maganerul poate examina variabilele relevante pe care routerul le stochează, cum ar fi numărul de pachete primite și transmise. 
   
@@ -26,7 +25,7 @@
   Fiecare stație de management sau agent dintr-o rețea administrată prin SNMP menține o bază de date locală cu informații relevante pentru administrarea rețelei, cunoscută sub numele de MIB. Caracteristicile administrabile ale resurselor, așa cum sunt definite într-un MIB compatibil cu SNMP, sunt numite obiecte administrate sau variabile de management .
 
   
-**3. MIB (Management Information Base )** 
+**3.MIB (Management Information Base )** 
 
    MIB conține informații despre resursele care necesită administrate. Aceste informații sunt organizate ierarhic și constau din instanțele de obiecte, care sunt, în esență, variabile.  MIB-ul, sau colecția de date de sub management-ul managerului, este unică pentru fiecare agent. MIB este împărțită în opt categorii : System, Interface, Address Translation, IP, UDP,ICMP , TCP.
    
