@@ -1,7 +1,7 @@
 #  <ins>Implementare SNMP .Aplicație demonstrativă</ins>
 
 ## Proiect la disciplina Rețele de Calculatoare 
-## Studenți : Aciocîrlănoaei Georgiana (1310A) & Dascălu  Ioana-Felicia (1310A)
+## Studenți : Aciocîrlănoaei Georgiana  & Dascălu  Ioana-Felicia - 1310 A 
 
 
    _Simple Network Management Protocol_ (SNMP, ro. : “Protocolul Simplu de Administrare a Rețelei “) este un protocol de administrare standardizat  Internet , conceput initial pentru gestionarea rețelelor TCP/IP .
