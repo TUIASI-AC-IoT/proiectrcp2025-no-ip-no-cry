@@ -272,6 +272,16 @@ Acest modul  oferă un ghid complet pentru:
 
 Programarea cu socket-uri începe prin importarea bibliotecii socket și crearea unui socket simplu.
 
+Alte module importante pe care le vom folosi pe parcursul acestui proiect sunt:
+
+- **pyasn1** - biblioteca pentru encodarea și decodarea ASN.1 (Abstract Syntax Notation One), standardul folosit de SNMP pentru reprezentarea structurilor de date. Oferă encoder și decoder BER (Basic Encoding Rules) pentru serializarea mesajelor SNMP in format binar;
+
+- **sys** - acces la parametri și funcții specifice interpreterului Python, inclusiv argumentele din linia de comandă și exit codes;
+
+- **binascii** - facilități pentru conversii intre date binare și reprezentări hexazecimale, util pentru debugging și afișarea pachetelor SNMP intr-un format usor de citit;
+
+- **time** - folosit pentru timestampuri, timeout-uri in comunicația UDP și măsurarea timpului de up-time al sistemului (sysUpTime din MIB).
+
 
 
 
