@@ -1,6 +1,37 @@
 #importarea modulelor necesare
 import socket
 import sys
+import wmi
+
+# functia pentru obtinerea temperaturii CPU folosind WMI
+def get_cpu_temp_wmi():
+    try:
+        # conectarea la WMI
+        w = wmi.WMI(namespace="root\\wmi")
+        
+        # obtinerea temperaturii CPU
+        temperatures = w.MSAcpi_ThermalZoneTemperature()
+
+        if not temperatures:
+             print("Eroare la citirea temperaturii CPU.")
+             return
+        
+        print("Temperaturile citite :")
+        # The temperature is usually returned in Kelvin * 10
+        for temp in temperatures:
+            # Convert Kelvin * 10 to Celsius: (Value / 10) - 273.15
+            temp_k_times_10 = temp.CurrentTemperature
+            temp_celsius = (temp_k_times_10 / 10.0) - 273.15
+            
+            temp_str = f"{temp_celsius:.2f}°C"
+            # WMI often returns data for multiple thermal zones
+            print(f"- Valoarea in Celsius: {temp_celsius:.2f}°C")
+
+            return temp_str
+
+    except Exception as e:
+        print(f"Eroare: {e}")
+
 
 #verificarea argumentelor din linia de comanda
 if len(sys.argv) < 2:
@@ -13,17 +44,9 @@ except ValueError:
     print("EROARE: Numar invalid. (ex: python agent.py 12345)")
     sys.exit(1)
 
-#configurarea adresei agentului
-if(sys.argv[1] == '12345'):
-    AGENT_ADDR = ('192.168.95.233', AGENT_PORT)
-else:
-    AGENT_ADDR = ('192.168.60.49', AGENT_PORT)
-
 #crearea socket-ului UDP pentru agent
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-#setarea timpului de expirare pentru recvfrom
-agent_socket.settimeout(15.0)  #timeout de 5 secunde  
+agent_socket.settimeout(15.0) 
 
 #legarea socket-ului la adresa agentului
 try:
@@ -33,38 +56,41 @@ except OSError as e:
     sys.exit(1)
 
 
-print(f"Agentul asculta pe UDP {AGENT_ADDR}...")
+print(f"Agentul asculta pe UDP 0.0.0.0:{AGENT_PORT}...")
 
 try:
     try:
         while True:
-        
-            #primirea cererii de la manager
             data, manager_addr = agent_socket.recvfrom(1024)
             
-            #afisarea cererii primite
             request_msg = data.decode()
             print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
 
-            #pregatirea raspunsului in functie de cerere
-            if "Agent 1" in request_msg:
+            #transmiterea raspunsului inapoi catre manager
+
+
+            # in portiunea asta facem un switch case pentru fiecare valoare MIB transmisa prin UDP
+            # momentan avem doar functia pentru temperatura CPU
+            if "GET /cpuTemp/" in request_msg and AGENT_PORT == 12345:
+                temp = get_cpu_temp_wmi()
+                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+                
+            elif "GET /sysDescr/ Agent 1" in request_msg:
                 response_data = b"Response: System Description - Port 12345 OK"
-            elif "Agent 2" in request_msg:
+            elif "GET /sysUpTime/ Agent 2" in request_msg:
                 response_data = b"Response: System UpTime - Port 12346 OK"
             else:
                 response_data = b"Response: Unknown Request"
+            # ---------------------------------------------
 
-            #trimiterea raspunsului catre manager
             agent_socket.sendto(response_data, manager_addr)
-            print(f"[SEND] Răspuns trimis către Manager.")
+            print(f"[SEND] Raspuns trimis catre Manager.")
             
     except socket.timeout:
-        #daca nu s-au primit cereri in timpul de asteptare
+        print("\nTimeout: Nu s-au primit cereri in ultimele 15 secunde. Se închide Agentul.")
         pass
 
-#exceptia pentru oprirea agentului cu Ctrl+C
 except KeyboardInterrupt:
     print("\nAgentul oprit.")
     
-#inchiderea socket-ului agentului
 agent_socket.close()

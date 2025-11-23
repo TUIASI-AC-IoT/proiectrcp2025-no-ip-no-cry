@@ -2,24 +2,21 @@
 import socket
 import select
 
-#configurarea adreselor agentilor pe localhost
-AGENT_1_ADDR = ('192.168.95.233', 12345)
-AGENT_2_ADDR = ('192.168.60.49', 12346)
+# configurarea adreselor/porturilot agentilor (localhost)
+AGENT_1_ADDR = ('127.0.0.1', 12345)
+AGENT_2_ADDR = ('127.0.0.1', 12346)
 
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+manager_socket.bind(('0.0.0.0', 0)) 
+manager_socket.setblocking(False) 
 
-#legarea socket-ului la o adresa locala
-manager_socket.bind(('0.0.0.0', 0))         # OS-ul alege un port liber automat
-manager_socket.setblocking(False)           # asigura simultanietatea procesarii
-
-#afisarea portului local al managerului
 print(f"Managerul asculta pe portul local: {manager_socket.getsockname()[1]}") 
 
-#cererile catre agenti
+# cereri catre agenti
 requests = {
-    AGENT_1_ADDR: b"GET /sysDescr/ Agent 1",        #b - reprezinta un sir de bytes
-    AGENT_2_ADDR: b"GET /sysUpTime/ Agent 2"
+    AGENT_1_ADDR: b"GET /cpuTemp/ Agent 1",        # Cerere de Temperatura
+    AGENT_2_ADDR: b"GET /sysUpTime/ Agent 2"       # Cerere de Uptime
 }
 
 #transmiterea cererilor catre agenti
@@ -28,42 +25,40 @@ for addr, payload in requests.items():
     manager_socket.sendto(payload, addr)
 
 #asteptarea raspunsurilor cu select
-timeout = 5.0 # Asteapta raspunsuri timp de 5 secunde
 responses_received = 0
 expected_responses = len(requests)
 
-print(f"\n[SELECT] Astept raspunsuri de la cei {expected_responses} Agenti (timeout: {timeout}s)...")
+print(f"\nAstept raspunsuri de la cei {expected_responses} agenti...\n")
 
 try:
-    #cat timp nu am primit toate raspunsurile asteptate
     while responses_received < expected_responses:
         
-
-        #selecteaza socket-urile pregatite pentru citire
-        ready_to_read, _, _ = select.select([manager_socket], [], [], timeout)      # _ - variabile neutilizate
+        ready_to_read, _, _ = select.select([manager_socket], [], [], 20.0)  # Timeout de 10 secunde
         
-        #daca socket-ul managerului este pregatit pentru citire
         if manager_socket in ready_to_read:
 
-            #primeste datele si adresa sursa
             data, addr = manager_socket.recvfrom(1024)
 
-            #afisarea raspunsului primit
+            # raspunsul primit de la agent
+            response_msg = data.decode()
+            
             print(f"--- [RECV] Raspuns primit de la {addr} ---")
-            print(f"Raspuns: {data.decode()}")
+            
+            if addr == AGENT_1_ADDR and "CPU Temperature" in response_msg:
+                print(f"Temperatura agentului 1: {response_msg.split('=')[-1].strip()}")
+            elif addr == AGENT_2_ADDR:
+                print(f"Up time-ul agentului 2: {response_msg}")
+            else:
+                print(f"Raspuns: {response_msg}")
 
-            #contorizarea raspunsurilor primite
             responses_received += 1
 
         else:
-            #daca s-a atins timeout-ul, iesim din bucla
             print("\nTimeout: Nu s-au primit toate raspunsurile la timp.")
             break
 
-#exceptia pentru oprirea managerului cu Ctrl+C
 except KeyboardInterrupt:
     print("\nManagerul oprit de utilizator.")
 
-#inchiderea socket-ului managerului
 manager_socket.close()
-print("Managerul s-a închis.")
+print("Managerul s-a inchis.")
