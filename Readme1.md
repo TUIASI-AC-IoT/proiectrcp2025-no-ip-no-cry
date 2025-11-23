@@ -248,7 +248,7 @@ Prin această ierarhie, este asigurată:
    _Manager SNMP_ – rulează pe un alt sistem din rețea și interacționează cu unul sau mai mulți agenți SNMP, afișând informațiile preluate și gestionând notificările de tip Trap.
 	
    _Scopul proiectului_ este de a evidenția modul în care poate fi realizată monitorizarea și administrarea resurselor unui sistem de calcul utilizând mecanismele standardizate ale protocolului SNMP, implementate de la zero prin intermediul modulului socket, fără a apela la biblioteci externe dedicate SNMP.
-	
+
    _Programarea cu sockets_ este esențială pentru comunicațiile de rețea, permițând schimbul de date între diferite dispositive, fiind o metodă de a conecta două noduri într-o rețea pentru a comunica între ele .
 
 
@@ -369,6 +369,7 @@ Cererea include OID-ul obiectului și versiunea protocolului ;
 	Detectare rapidă a situațiilor critice ;
 
 	Simulează un sistem real de monitorizare de rețea .
+![diagrama_rc](https://github.com/user-attachments/assets/fe7ea21f-2072-4e60-8904-6874d7acde3e)
 
 
 
