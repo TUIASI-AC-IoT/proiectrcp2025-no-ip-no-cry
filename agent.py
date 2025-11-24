@@ -43,13 +43,18 @@ def get_cpu_load_wmi():
         print(f"Eroare: {e}")
 
 AGENT_PORT = 161
+AGENT_NAME = socket.gethostname()
+AGENT_IP = socket.gethostbyname(AGENT_NAME)
+
+print(f"Agent Name: {AGENT_NAME}")
+print(f"Agent IP: {AGENT_IP}")
 
 #crearea socket-ului UDP pentru agent
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 #legarea socket-ului la adresa agentului
 try:
-    agent_socket.bind(('10.107.11.0', 161))
+    agent_socket.bind((AGENT_IP, 161))
 except OSError as e:
     sys.exit(1)
 
