@@ -42,26 +42,15 @@ def get_cpu_load_wmi():
     except Exception as e:
         print(f"Eroare: {e}")
 
-
-#verificarea argumentelor din linia de comanda
-if len(sys.argv) < 2:
-    print("EROARE: Compilare incorecta! (ex: python agent.py 12345)")
-    sys.exit(1)
-
-try:
-    AGENT_PORT = int(sys.argv[1])
-except ValueError:
-    print("EROARE: Numar invalid. (ex: python agent.py 12345)")
-    sys.exit(1)
+AGENT_PORT = 161
 
 #crearea socket-ului UDP pentru agent
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 #legarea socket-ului la adresa agentului
 try:
-    agent_socket.bind(('0.0.0.0', 161))
+    agent_socket.bind(('10.107.11.0', 161))
 except OSError as e:
-    print(f"EROARE: Nu pot lega socket-ul pe portul {AGENT_PORT}.\nMotiv: {e}")
     sys.exit(1)
 
 
