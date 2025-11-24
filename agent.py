@@ -18,14 +18,13 @@ def get_cpu_temp_wmi():
              return
         
         print("Temperaturile citite :")
-        # The temperature is usually returned in Kelvin * 10
+        # convertirea temperaturii din Kelvin*10 in Celsius
         for temp in temperatures:
-            # Convert Kelvin * 10 to Celsius: (Value / 10) - 273.15
             temp_k_times_10 = temp.CurrentTemperature
             temp_celsius = (temp_k_times_10 / 10.0) - 273.15
             
             temp_str = f"{temp_celsius:.2f}°C"
-            # WMI often returns data for multiple thermal zones
+            
             print(f"- Valoarea in Celsius: {temp_celsius:.2f}°C")
 
             return temp_str
@@ -76,14 +75,14 @@ try:
         print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
 
         # in portiunea asta facem un switch case pentru fiecare valoare MIB transmisa prin UDP
-        # momentan avem doar functia pentru temperatura CPU
+        # momentan avem doar functia pentru temperatura CPU si Load CPU
         if "GET /cpuTemp/" in request_msg and AGENT_PORT == 12345:
             temp = get_cpu_temp_wmi()
-            response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+            response_data = f"Response: Thermal Temperature = {temp}".encode('utf-8')
             
         elif "GET /sysDescr/ Agent 1" in request_msg:
             response_data = b"Response: System Description - Port 12345 OK"
-        elif "GET /sysUpTime/ Agent 2" in request_msg:
+        elif "GET /cpuLoad/ Agent 2" in request_msg:
             cpu_load = get_cpu_load_wmi()
             response_data = b"Response: CPU Load = " + cpu_load.encode('utf-8')
         else:

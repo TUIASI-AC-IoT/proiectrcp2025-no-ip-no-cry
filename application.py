@@ -1,6 +1,16 @@
+#importarea modulelor necesare
+import socket
+import select
 from tkinter import *
-# import agent as agt
-# import manager as mgr
+
+# configurarea adreselor/porturilot agentilor (localhost)
+AGENT_1_ADDR = ('127.0.0.1', 12345)
+AGENT_2_ADDR = ('127.0.0.1', 12346)
+
+#crearea socket-ului UDP pentru manager
+manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+manager_socket.bind(('0.0.0.0', 0)) 
+manager_socket.setblocking(False) 
 
 
 mib = {
@@ -14,6 +24,7 @@ mib = {
     "1.3.1" : "Network Load"    
 }
 
+# interfata grafica
 
 root = Tk()
 root.title("SNMP v1 - Demonstrative Application")
@@ -53,20 +64,21 @@ disk.grid(column=0, row=9, sticky="w")
 net.grid(column=0, row=10, sticky="w")
 net_load.grid(column=0, row=11, sticky="w")
 
-myLabl = Label(frame_response, text="Waiting for responses...", font=("Times New Roman", 12), anchor = "w")
+myLabl = Label(frame_response, text="Managerul asculta pe portul local... ", font=("Times New Roman", 12), anchor = "w")
 myLabl.grid(column=0, row=0, sticky="w")
 
-e = Entry(frame_up, text="info", width=50, borderwidth=5, font=("Times New Roman", 12))
-e.insert(0, "Enter agent's ID: ")
+e = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
+e.insert(0, "Insert function call here (ex: GET /cpuTemp/ )")
 e.grid(row=0, column=0)
 
 
 # handling responses
 response_row = 1
 
+#in fiecare functie se va face cate un switch case pentru fiecare tip de request
 def sendRequest():
     global response_row
-    myLabl = Label(frame_response, text="Send Request for " + e.get() , font=("Times New Roman", 12), anchor ="w")
+    myLabl = Label(frame_response, text="Se trimite cererea "+ e.get() + "..."  , font=("Times New Roman", 12), anchor ="w")
     myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
     response_row += 1
 
