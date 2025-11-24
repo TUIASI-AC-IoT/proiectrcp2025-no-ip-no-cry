@@ -59,7 +59,7 @@ agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 #legarea socket-ului la adresa agentului
 try:
-    agent_socket.bind(('10.107.11.0', AGENT_PORT))
+    agent_socket.bind(('0.0.0.0', 161))
 except OSError as e:
     print(f"EROARE: Nu pot lega socket-ul pe portul {AGENT_PORT}.\nMotiv: {e}")
     sys.exit(1)

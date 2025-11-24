@@ -3,12 +3,12 @@ import socket
 import select
 
 # configurarea adreselor/porturilot agentilor (localhost)
-AGENT_1_ADDR = ('10.107.11.160', 12345)         #laptop felicia
-AGENT_2_ADDR = ('10.107.11.199', 12346)         #laptop georgiana
+AGENT_1_ADDR = ('10.107.11.160', 161)         #laptop felicia
+AGENT_2_ADDR = ('10.107.11.199', 161)         #laptop georgiana
 
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-manager_socket.bind(('10.107.11.0', 0))
+manager_socket.bind(('0.0.0.0', 0))
 manager_socket.setblocking(False) 
 
 print(f"Managerul asculta pe portul local: {manager_socket.getsockname()[1]}") 
@@ -30,8 +30,10 @@ expected_responses = len(requests)
 
 print(f"\nAstept raspunsuri de la cei {expected_responses} agenti...\n")
 
-try:
-    while responses_received < expected_responses:
+
+while True:
+
+    try:
         
         ready_to_read, _, _ = select.select([manager_socket], [], [], None) 
         
@@ -53,8 +55,7 @@ try:
 
             responses_received += 1
 
-except KeyboardInterrupt:
-    print("\nManagerul oprit de utilizator.")
-
-manager_socket.close()
-print("Managerul s-a inchis.")
+    except KeyboardInterrupt:
+        print("\nManagerul oprit de utilizator.")
+        manager_socket.close()
+        print("Managerul s-a inchis.")
