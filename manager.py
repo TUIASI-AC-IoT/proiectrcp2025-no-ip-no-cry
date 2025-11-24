@@ -1,6 +1,7 @@
 #importarea modulelor necesare
 import socket
 import select
+import tkinter as tk
 
 # configurarea adreselor/porturilot agentilor (localhost)
 AGENT_1_ADDR = ('127.0.0.1', 12345)
@@ -10,6 +11,7 @@ AGENT_2_ADDR = ('127.0.0.1', 12346)
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 manager_socket.bind(('0.0.0.0', 0)) 
 manager_socket.setblocking(False) 
+# manager_socket.setblocking(True) ar putea fi o alternativa mai buna pentru asteptarea infinita in lipsa lui select
 
 print(f"Managerul asculta pe portul local: {manager_socket.getsockname()[1]}") 
 
@@ -28,12 +30,13 @@ for addr, payload in requests.items():
 responses_received = 0
 expected_responses = len(requests)
 
-print(f"\nAstept raspunsuri de la cei {expected_responses} agenti...\n")
+print(f"\nAstept raspunsuri de la cei {expected_responses} agenti (se va astepta indefinit)...\n")
 
 try:
     while responses_received < expected_responses:
         
-        ready_to_read, _, _ = select.select([manager_socket], [], [], 20.0)  # Timeout de 10 secunde
+        # Timeout-ul a fost ELIMINAT (al 4-lea argument este None)
+        ready_to_read, _, _ = select.select([manager_socket], [], [], None) 
         
         if manager_socket in ready_to_read:
 
@@ -47,15 +50,11 @@ try:
             if addr == AGENT_1_ADDR and "CPU Temperature" in response_msg:
                 print(f"Temperatura agentului 1: {response_msg.split('=')[-1].strip()}")
             elif addr == AGENT_2_ADDR:
-                print(f"Up time-ul agentului 2: {response_msg}")
+                print(f"CPU Load-ul agentului 2: {response_msg.split('=')[-1].strip()}")
             else:
                 print(f"Raspuns: {response_msg}")
 
             responses_received += 1
-
-        else:
-            print("\nTimeout: Nu s-au primit toate raspunsurile la timp.")
-            break
 
 except KeyboardInterrupt:
     print("\nManagerul oprit de utilizator.")

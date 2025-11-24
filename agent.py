@@ -3,6 +3,7 @@ import socket
 import sys
 import wmi
 
+
 # functia pentru obtinerea temperaturii CPU folosind WMI
 def get_cpu_temp_wmi():
     try:
@@ -32,6 +33,15 @@ def get_cpu_temp_wmi():
     except Exception as e:
         print(f"Eroare: {e}")
 
+def get_cpu_load_wmi():
+    try:
+        w = wmi.WMI()
+        cpu_loads = w.Win32_Processor()
+        for cpu in cpu_loads:
+            return f"{cpu.LoadPercentage}%"
+    except Exception as e:
+        print(f"Eroare: {e}")
+
 
 #verificarea argumentelor din linia de comanda
 if len(sys.argv) < 2:
@@ -46,7 +56,6 @@ except ValueError:
 
 #crearea socket-ului UDP pentru agent
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-agent_socket.settimeout(15.0) 
 
 #legarea socket-ului la adresa agentului
 try:
@@ -59,37 +68,33 @@ except OSError as e:
 print(f"Agentul asculta pe UDP 0.0.0.0:{AGENT_PORT}...")
 
 try:
-    try:
-        while True:
-            data, manager_addr = agent_socket.recvfrom(1024)
+    # Bucla principala de asteptare
+    while True:
+        data, manager_addr = agent_socket.recvfrom(1024)
+        
+        request_msg = data.decode()
+        print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
+
+        # in portiunea asta facem un switch case pentru fiecare valoare MIB transmisa prin UDP
+        # momentan avem doar functia pentru temperatura CPU
+        if "GET /cpuTemp/" in request_msg and AGENT_PORT == 12345:
+            temp = get_cpu_temp_wmi()
+            response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
             
-            request_msg = data.decode()
-            print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
+        elif "GET /sysDescr/ Agent 1" in request_msg:
+            response_data = b"Response: System Description - Port 12345 OK"
+        elif "GET /sysUpTime/ Agent 2" in request_msg:
+            cpu_load = get_cpu_load_wmi()
+            response_data = b"Response: CPU Load = " + cpu_load.encode('utf-8')
+        else:
+            response_data = b"Response: Unknown Request"
+        # ---------------------------------------------
 
-            #transmiterea raspunsului inapoi catre manager
-
-
-            # in portiunea asta facem un switch case pentru fiecare valoare MIB transmisa prin UDP
-            # momentan avem doar functia pentru temperatura CPU
-            if "GET /cpuTemp/" in request_msg and AGENT_PORT == 12345:
-                temp = get_cpu_temp_wmi()
-                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
-                
-            elif "GET /sysDescr/ Agent 1" in request_msg:
-                response_data = b"Response: System Description - Port 12345 OK"
-            elif "GET /sysUpTime/ Agent 2" in request_msg:
-                response_data = b"Response: System UpTime - Port 12346 OK"
-            else:
-                response_data = b"Response: Unknown Request"
-            # ---------------------------------------------
-
-            agent_socket.sendto(response_data, manager_addr)
-            print(f"[SEND] Raspuns trimis catre Manager.")
-            
-    except socket.timeout:
-        print("\nTimeout: Nu s-au primit cereri in ultimele 15 secunde. Se închide Agentul.")
-        pass
-
+        agent_socket.sendto(response_data, manager_addr)
+        print(f"[SEND] Raspuns trimis catre Manager.")
+        
+        break
+        
 except KeyboardInterrupt:
     print("\nAgentul oprit.")
     
