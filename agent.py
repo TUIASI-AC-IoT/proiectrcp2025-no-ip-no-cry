@@ -20,8 +20,8 @@ def get_cpu_temp_wmi():
         print("Temperaturile citite :")
         # convertirea temperaturii din Kelvin*10 in Celsius
         for temp in temperatures:
-            temp_k_times_10 = temp.CurrentTemperature
-            temp_celsius = (temp_k_times_10 / 10.0) - 273.15
+            temp_k = temp.CurrentTemperature
+            temp_celsius = (temp_k / 10.0) - 273.15
             
             temp_str = f"{temp_celsius:.2f}°C"
             
@@ -37,6 +37,7 @@ def get_cpu_load_wmi():
         w = wmi.WMI()
         cpu_loads = w.Win32_Processor()
         for cpu in cpu_loads:
+            print(f"- Valoarea: {cpu.LoadPercentage}%")
             return f"{cpu.LoadPercentage}%"
     except Exception as e:
         print(f"Eroare: {e}")
@@ -79,15 +80,13 @@ try:
         if "GET /cpuTemp/" in request_msg and AGENT_PORT == 12345:
             temp = get_cpu_temp_wmi()
             response_data = f"Response: Thermal Temperature = {temp}".encode('utf-8')
-            
-        elif "GET /sysDescr/ Agent 1" in request_msg:
-            response_data = b"Response: System Description - Port 12345 OK"
+
         elif "GET /cpuLoad/ Agent 2" in request_msg:
             cpu_load = get_cpu_load_wmi()
             response_data = b"Response: CPU Load = " + cpu_load.encode('utf-8')
+
         else:
             response_data = b"Response: Unknown Request"
-        # ---------------------------------------------
 
         agent_socket.sendto(response_data, manager_addr)
         print(f"[SEND] Raspuns trimis catre Manager.")
