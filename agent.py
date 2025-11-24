@@ -59,13 +59,13 @@ agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 #legarea socket-ului la adresa agentului
 try:
-    agent_socket.bind(('0.0.0.0', AGENT_PORT))
+    agent_socket.bind(('10.107.11.0', AGENT_PORT))
 except OSError as e:
     print(f"EROARE: Nu pot lega socket-ul pe portul {AGENT_PORT}.\nMotiv: {e}")
     sys.exit(1)
 
 
-print(f"Agentul asculta pe UDP 0.0.0.0:{AGENT_PORT}...")
+print(f"Agentul asculta pe UDP 10.107.11.0:{AGENT_PORT}...")
 
 try:
     # Bucla principala de asteptare

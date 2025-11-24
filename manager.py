@@ -3,12 +3,12 @@ import socket
 import select
 
 # configurarea adreselor/porturilot agentilor (localhost)
-AGENT_1_ADDR = ('127.0.0.1', 12345)
-AGENT_2_ADDR = ('127.0.0.1', 12346)
+AGENT_1_ADDR = ('10.107.11.160', 12345)         #laptop felicia
+AGENT_2_ADDR = ('10.107.11.199', 12346)         #laptop georgiana
 
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-manager_socket.bind(('0.0.0.0', 0)) 
+manager_socket.bind(('10.107.11.0', 0))
 manager_socket.setblocking(False) 
 
 print(f"Managerul asculta pe portul local: {manager_socket.getsockname()[1]}") 
