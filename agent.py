@@ -2,7 +2,18 @@
 import socket
 import sys
 import wmi
+import psutil
 
+def get_wifi_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '0.0.0.0'
+    finally:
+        s.close()
+        return ip
 
 # functia pentru obtinerea temperaturii CPU folosind WMI
 def get_cpu_temp_wmi():
@@ -43,11 +54,11 @@ def get_cpu_load_wmi():
         print(f"Eroare: {e}")
 
 AGENT_PORT = 161
-AGENT_NAME = socket.gethostname()
-AGENT_IP = socket.gethostbyname(AGENT_NAME)
+AGENT_IP = get_wifi_ip()
 
-print(f"Agent Name: {AGENT_NAME}")
 print(f"Agent IP: {AGENT_IP}")
+
+sys.exit(0)
 
 #crearea socket-ului UDP pentru agent
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
