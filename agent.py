@@ -63,7 +63,7 @@ def get_cpu_load_wmi():
     except Exception as e:
         print(f"Eroare: {e}")
 
-def get_network_load_wmi():
+def get_network_load_psutil():
     try:
         net_io_1 = psutil.net_io_counters()
         time.sleep(0.5)
@@ -134,7 +134,7 @@ try:
                 response_data = f"Response: CPU Load = {cpu_load}".encode('utf-8')
 
             case "Network Load":
-                net_load = get_network_load_wmi()
+                net_load = get_network_load_psutil()
                 response_data = f"Response: Network Load:  {net_load}".encode('utf-8')
 
             case "RAM":
