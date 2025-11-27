@@ -3,16 +3,16 @@ import socket
 import select
 from tkinter import *
 
-# configurarea adreselor/porturilot agentilor (localhost)
-AGENT_1_ADDR = ('127.0.0.1', 12345)
-AGENT_2_ADDR = ('127.0.0.1', 12346)
+# configurarea adreselor/porturilot agentilor
+AGENT_1_ADDR = ('127.0.0.1', 161)         #laptop felicia
+AGENT_2_ADDR = ('127.0.0.2', 161)         #laptop georgiana
 
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 manager_socket.bind(('0.0.0.0', 0)) 
 manager_socket.setblocking(False) 
 
-
+# configurarea MIB-ului
 mib = {
     "1.1.1" : "CPU Load",
     "1.1.2" : "CPU Temperature",
@@ -64,36 +64,110 @@ disk.grid(column=0, row=9, sticky="w")
 net.grid(column=0, row=10, sticky="w")
 net_load.grid(column=0, row=11, sticky="w")
 
-myLabl = Label(frame_response, text="Managerul asculta pe portul local... ", font=("Times New Roman", 12), anchor = "w")
+myLabl = Label(frame_response, text="Managerul asculta pe portul local 161(UDP)... ", font=("Times New Roman", 12), anchor = "w")
 myLabl.grid(column=0, row=0, sticky="w")
 
 e = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
-e.insert(0, "Insert function call here (ex: GET /cpuTemp/ )")
+e.insert(0, "Introduceti MIB-ul: (ex: pentru CPU Load: '1.1.1')")
 e.grid(row=0, column=0)
 
 
 # handling responses
 response_row = 1
+responses_received = 0
+expected_responses = 2
+
+def check_for_responses():
+    global response_row, responses_received
+    
+    try:
+        ready_to_read, _, _ = select.select([manager_socket], [], [], 0.1)
+        
+        if manager_socket in ready_to_read:
+            data, addr = manager_socket.recvfrom(1024)
+            response_msg = data.decode()
+            
+            myLabl = Label(frame_response, 
+                          text=f"Raspuns primit de la {addr}: {response_msg}",
+                          font=("Times New Roman", 12), anchor="w")
+            myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
+            response_row += 1
+            responses_received += 1
+            
+            if responses_received < expected_responses:
+                root.after(100, check_for_responses)
+            else:
+                responses_received = 0
+    except Exception as e:
+        print(f"Eroare la primirea raspunsului: {e}")
+        root.after(100, check_for_responses)
+
 
 #in fiecare functie se va face cate un switch case pentru fiecare tip de request
 def sendRequest():
-    global response_row
-    myLabl = Label(frame_response, text="Se trimite cererea "+ e.get() + "..."  , font=("Times New Roman", 12), anchor ="w")
+    global response_row, responses_received
+    
+    responses_received = 0
+    
+    myLabl = Label(frame_response, 
+                  text=f"Se trimite cererea: {mib[e.get()]}...",
+                  font=("Times New Roman", 12), anchor="w")
     myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
     response_row += 1
+    
+    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
+    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
+    
+    resp = Label(frame_response, text="Se asteapta raspunsurile... ",
+                font=("Times New Roman", 12), anchor="w")
+    resp.grid(row=response_row, column=0, sticky="w", pady=2)
+    response_row += 1
+    
+    root.after(100, check_for_responses)
 
 
 def SendNextRequest():
-    global response_row
-    myLabl = Label(frame_response, text="Send Next Request for " + e.get() , font=("Times New Roman", 12), anchor ="w")
+    global response_row, responses_received
+    
+    responses_received = 0
+    
+    myLabl = Label(frame_response, 
+                  text=f"Se trimite urmatoarea cereree: {mib[e.get()]}...",
+                  font=("Times New Roman", 12), anchor="w")
     myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
     response_row += 1
+    
+    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
+    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
+    
+    resp = Label(frame_response, text="Se asteapta raspunsurile... ",
+                font=("Times New Roman", 12), anchor="w")
+    resp.grid(row=response_row, column=0, sticky="w", pady=2)
+    response_row += 1
+    
+    root.after(100, check_for_responses)
+
 
 def setRequest():
-    global response_row
-    myLabl = Label(frame_response, text="Set Request for " + e.get() , font=("Times New Roman", 12), anchor ="w")
+    global response_row, responses_received
+    
+    responses_received = 0
+    
+    myLabl = Label(frame_response, 
+                  text=f"Se trimite setarea: {mib[e.get()]}...",
+                  font=("Times New Roman", 12), anchor="w")
     myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
     response_row += 1
+    
+    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
+    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
+    
+    resp = Label(frame_response, text="Se asteapta raspunsurile... ",
+                font=("Times New Roman", 12), anchor="w")
+    resp.grid(row=response_row, column=0, sticky="w", pady=2)
+    response_row += 1
+    
+    root.after(100, check_for_responses)
 
 # buttons
 send_button = Button(frame_up, text="Get Request", font=("Times New Roman", 14), width=20, command=sendRequest)

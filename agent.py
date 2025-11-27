@@ -2,7 +2,6 @@
 import socket
 import sys
 import wmi
-import psutil
 
 def get_wifi_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -54,11 +53,9 @@ def get_cpu_load_wmi():
         print(f"Eroare: {e}")
 
 AGENT_PORT = 161
-AGENT_IP = get_wifi_ip()
+AGENT_IP = '127.0.0.2'  #get_wifi_ip()
 
 print(f"Agent IP: {AGENT_IP}")
-
-sys.exit(0)
 
 #crearea socket-ului UDP pentru agent
 agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -82,11 +79,11 @@ try:
 
         # in portiunea asta facem un switch case pentru fiecare valoare MIB transmisa prin UDP
         # momentan avem doar functia pentru temperatura CPU si Load CPU
-        if "GET /cpuTemp/" in request_msg and AGENT_PORT == 12345:
+        if "CPU Temperature" in request_msg:
             temp = get_cpu_temp_wmi()
             response_data = f"Response: Thermal Temperature = {temp}".encode('utf-8')
 
-        elif "GET /cpuLoad/ Agent 2" in request_msg:
+        elif "CPU Load" in request_msg:
             cpu_load = get_cpu_load_wmi()
             response_data = b"Response: CPU Load = " + cpu_load.encode('utf-8')
 
