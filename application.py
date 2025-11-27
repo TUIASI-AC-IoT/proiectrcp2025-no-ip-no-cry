@@ -21,7 +21,8 @@ mib = {
     "1.1.2.3" : "Temperature Kelvin",
     "1.2.1" : "RAM",
     "1.2.2" : "Disk",
-    "1.3.1" : "Network Load"    
+    "1.3.1" : "Network Load", 
+    "f.f.f" : "close"
 }
 
 # interfata grafica
@@ -76,6 +77,27 @@ e.grid(row=0, column=0)
 response_row = 1
 responses_received = 0
 expected_responses = 2
+MAX_RESPONSES = 20 
+response_labels = []
+
+def add_response_label(text):
+    global response_row, response_labels
+    
+    new_label = Label(frame_response, text=text,
+                     font=("Times New Roman", 12), anchor="w")
+    new_label.grid(row=response_row, column=0, sticky="w", pady=2)
+    response_row += 1
+    
+    response_labels.append(new_label)
+    
+    if len(response_labels) > MAX_RESPONSES:
+        old_label = response_labels.pop(0)
+        old_label.destroy()
+        
+        for idx, label in enumerate(response_labels):
+            label.grid(row=idx + 1, column=0, sticky="w", pady=2)
+        
+        response_row = len(response_labels) + 1
 
 def check_for_responses():
     global response_row, responses_received
@@ -87,11 +109,7 @@ def check_for_responses():
             data, addr = manager_socket.recvfrom(1024)
             response_msg = data.decode()
             
-            myLabl = Label(frame_response, 
-                          text=f"Raspuns primit de la {addr}: {response_msg}",
-                          font=("Times New Roman", 12), anchor="w")
-            myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
-            response_row += 1
+            add_response_label(f"Raspuns primit de la {addr}: {response_msg}")
             responses_received += 1
             
             if responses_received < expected_responses:
@@ -109,19 +127,12 @@ def sendRequest():
     
     responses_received = 0
     
-    myLabl = Label(frame_response, 
-                  text=f"Se trimite cererea: {mib[e.get()]}...",
-                  font=("Times New Roman", 12), anchor="w")
-    myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
-    response_row += 1
+    add_response_label(f"Se trimite cererea: {mib[e.get()]}...")
     
     manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
     manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
     
-    resp = Label(frame_response, text="Se asteapta raspunsurile... ",
-                font=("Times New Roman", 12), anchor="w")
-    resp.grid(row=response_row, column=0, sticky="w", pady=2)
-    response_row += 1
+    add_response_label("Se asteapta raspunsurile... ")
     
     root.after(100, check_for_responses)
 
@@ -131,19 +142,12 @@ def SendNextRequest():
     
     responses_received = 0
     
-    myLabl = Label(frame_response, 
-                  text=f"Se trimite urmatoarea cereree: {mib[e.get()]}...",
-                  font=("Times New Roman", 12), anchor="w")
-    myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
-    response_row += 1
+    add_response_label(f"Se trimite urmatoarea cerere: {mib[e.get()]}...")
     
     manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
     manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
     
-    resp = Label(frame_response, text="Se asteapta raspunsurile... ",
-                font=("Times New Roman", 12), anchor="w")
-    resp.grid(row=response_row, column=0, sticky="w", pady=2)
-    response_row += 1
+    add_response_label("Se asteapta raspunsurile... ")
     
     root.after(100, check_for_responses)
 
@@ -153,19 +157,12 @@ def setRequest():
     
     responses_received = 0
     
-    myLabl = Label(frame_response, 
-                  text=f"Se trimite setarea: {mib[e.get()]}...",
-                  font=("Times New Roman", 12), anchor="w")
-    myLabl.grid(row=response_row, column=0, sticky="w", pady=2)
-    response_row += 1
+    add_response_label(f"Se trimite setarea: {mib[e.get()]}...")
     
     manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
     manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
     
-    resp = Label(frame_response, text="Se asteapta raspunsurile... ",
-                font=("Times New Roman", 12), anchor="w")
-    resp.grid(row=response_row, column=0, sticky="w", pady=2)
-    response_row += 1
+    add_response_label("Se asteapta raspunsurile... ")
     
     root.after(100, check_for_responses)
 

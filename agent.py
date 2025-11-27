@@ -2,6 +2,8 @@
 import socket
 import sys
 import wmi
+import psutil
+import time
 
 def get_wifi_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -15,7 +17,7 @@ def get_wifi_ip():
         return ip
 
 # functia pentru obtinerea temperaturii CPU folosind WMI
-def get_cpu_temp_wmi():
+def get_cpu_temp_wmi(tip = "Celsius"):
     try:
         # conectarea la WMI
         w = wmi.WMI(namespace="root\\wmi")
@@ -28,14 +30,23 @@ def get_cpu_temp_wmi():
              return
         
         print("Temperaturile citite :")
-        # convertirea temperaturii din Kelvin*10 in Celsius
+
         for temp in temperatures:
-            temp_k = temp.CurrentTemperature
-            temp_celsius = (temp_k / 10.0) - 273.15
-            
-            temp_str = f"{temp_celsius:.2f}°C"
-            
-            print(f"- Valoarea in Celsius: {temp_celsius:.2f}°C")
+
+            if tip == "Celsius":
+                temp_celsius = (temp.CurrentTemperature / 10.0) - 273.15
+                temp_str = f"{temp_celsius:.2f}°C"
+                print(f"- Valoarea in Celsius: {temp_str}")
+
+            elif tip == "Fahrenheit":
+                temp_fahrenheit = ((temp.CurrentTemperature / 10.0) - 273.15) * 9/5 + 32
+                temp_str = f"{temp_fahrenheit:.2f}°F"
+                print(f"- Valoarea in Fahrenheit: {temp_str}")
+
+            elif tip == "Kelvin":
+                temp_kelvin = temp.CurrentTemperature / 10.0
+                temp_str = f"{temp_kelvin:.2f}°K"
+                print(f"- Valoarea in Kelvin: {temp_str}")
 
             return temp_str
 
@@ -51,6 +62,34 @@ def get_cpu_load_wmi():
             return f"{cpu.LoadPercentage}%"
     except Exception as e:
         print(f"Eroare: {e}")
+
+def get_network_load_wmi():
+    try:
+        net_io_1 = psutil.net_io_counters()
+        time.sleep(0.5)
+        net_io_2 = psutil.net_io_counters()
+        
+        upload = (net_io_2.bytes_sent - net_io_1.bytes_sent) / 1024 / 0.5
+        download = (net_io_2.bytes_recv - net_io_1.bytes_recv) / 1024 / 0.5
+        
+        return f"Upload: {upload:.1f} KB/s, Download: {download:.1f} KB/s"
+    except Exception as e:
+        return f"Eroare: {e}"
+
+def get_ram_usage_wmi():
+    try:
+        w = wmi.WMI()
+        os_info = w.Win32_OperatingSystem()[0]
+        
+        total_ram = int(os_info.TotalVisibleMemorySize) / 1024
+        free_ram = int(os_info.FreePhysicalMemory) / 1024
+        used_ram = total_ram - free_ram
+        ram_usage_percent = (used_ram / total_ram) * 100
+        ram_usage_str = f"{used_ram:.2f} MB / {total_ram:.2f} MB ({ram_usage_percent:.2f}%)"
+
+        return ram_usage_str
+    except Exception as e:
+        return f"Eroare: {e}"
 
 AGENT_PORT = 161
 AGENT_IP = '127.0.0.2'  #get_wifi_ip()
@@ -77,25 +116,39 @@ try:
         request_msg = data.decode()
         print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
 
-        # in portiunea asta facem un switch case pentru fiecare valoare MIB transmisa prin UDP
-        # momentan avem doar functia pentru temperatura CPU si Load CPU
-        if "CPU Temperature" in request_msg:
-            temp = get_cpu_temp_wmi()
-            response_data = f"Response: Thermal Temperature = {temp}".encode('utf-8')
+        match request_msg:
+            case "Temperature Celsius":
+                 temp = get_cpu_temp_wmi("Celsius")
+                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-        elif "CPU Load" in request_msg:
-            cpu_load = get_cpu_load_wmi()
-            response_data = b"Response: CPU Load = " + cpu_load.encode('utf-8')
+            case "Temperature Fahrenheit":
+                 temp = get_cpu_temp_wmi("Fahrenheit")
+                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-        else:
-            response_data = b"Response: Unknown Request"
+            case "Temperature Kelvin":
+                temp = get_cpu_temp_wmi("Kelvin")
+                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+
+            case "CPU Load":
+                cpu_load = get_cpu_load_wmi()
+                response_data = f"Response: CPU Load = {cpu_load}".encode('utf-8')
+
+            case "Network Load":
+                net_load = get_network_load_wmi()
+                response_data = f"Response: Network Load:  {net_load}".encode('utf-8')
+
+            case "RAM":
+                ram_usage = get_ram_usage_wmi()
+                response_data = f"Response: RAM Usage = {ram_usage}".encode('utf-8')
+
+            case default:
+                agent_socket.close()
+                sys.exit(1)
+
 
         agent_socket.sendto(response_data, manager_addr)
         print(f"[SEND] Raspuns trimis catre Manager.")
-        
-        break
-        
 except KeyboardInterrupt:
-    print("\nAgentul oprit.")
-    
-agent_socket.close()
+    print("\nAgent oprit de utilizator.")
+    agent_socket.close()
+    print("Agentul s-a inchis.")
