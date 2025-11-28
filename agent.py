@@ -90,9 +90,28 @@ def get_ram_usage_wmi():
         return ram_usage_str
     except Exception as e:
         return f"Eroare: {e}"
+    
+def get_disk_usage_psutil():
+    try:
+        disk_usage = psutil.disk_usage('/')
+        used = disk_usage.used / (1024 ** 3)
+        total = disk_usage.total / (1024 ** 3)
+        percent = disk_usage.percent
+        disk_usage_str = f"{used:.2f} GB / {total:.2f} GB ({percent:.2f}%)"
+        return disk_usage_str
+    except Exception as e:
+        return f"Eroare: {e}"
+    
+## aici trebuie adaugata o functie pentru setarea valorilor primite de la manager
+## si inca o functie pentru trimiiterea trap-urilor in caz de depasire 
 
 AGENT_PORT = 161
-AGENT_IP = '127.0.0.2'  #get_wifi_ip()
+AGENT_IP = '127.0.0.1'  #get_wifi_ip()
+
+## poti sa initializezi aici variabilele globale pentru threshold-uri, daca vrei
+## sa le avem pe toate la un loc
+## sa fie de genu threshold_cpu_load = 80  # procentaj
+## sau threshold_temp = 75  # grade Celsius si tot asa
 
 print(f"Agent IP: {AGENT_IP}")
 
@@ -141,10 +160,17 @@ try:
                 ram_usage = get_ram_usage_wmi()
                 response_data = f"Response: RAM Usage = {ram_usage}".encode('utf-8')
 
-            case default:
+            case "Disk":
+                disk_usage = get_disk_usage_psutil()
+                response_data = f"Response: Disk Usage = {disk_usage}".encode('utf-8')
+
+            case "close":
+                print("Inchidere...")
                 agent_socket.close()
                 sys.exit(1)
 
+            case _:
+                response_data = f"Eroare: Request necunoscut.".encode('utf-8')
 
         agent_socket.sendto(response_data, manager_addr)
         print(f"[SEND] Raspuns trimis catre Manager.")

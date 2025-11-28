@@ -34,9 +34,12 @@ frame_up = LabelFrame(root, padx=20, pady=20)
 frame_response = LabelFrame(root, text="Responses", padx=20, pady=20)
 frame_info = LabelFrame(root, text="MIB Tree", padx=20, pady=20)
 
-frame_up.grid(row=0, column=0, padx=20, pady=10, columnspan=3)
+frame_up.grid(row=0, column=0, padx=20, pady=10, columnspan=4)
 frame_info.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
-frame_response.grid(row=1, column=1, padx=20, pady=10, sticky="nsew")
+frame_response.grid(row=1, column=1, padx=20, pady=10, sticky="nsew", columnspan=3)
+setR = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
+setR.insert(0, "Introduceti valoarea pentru Set Request")
+setR.grid(row=0, column=4)
 
 #showing the MIB Tree
 system = Label(frame_info, text="^ System (1)", font=("Times New Roman", 12, "bold"))
@@ -103,7 +106,7 @@ def check_for_responses():
     global response_row, responses_received
     
     try:
-        ready_to_read, _, _ = select.select([manager_socket], [], [], 0.1)
+        ready_to_read, _, _ = select.select([manager_socket], [], [], 0.5)
         
         if manager_socket in ready_to_read:
             data, addr = manager_socket.recvfrom(1024)
@@ -121,7 +124,6 @@ def check_for_responses():
         root.after(100, check_for_responses)
 
 
-#in fiecare functie se va face cate un switch case pentru fiecare tip de request
 def sendRequest():
     global response_row, responses_received
     
@@ -134,9 +136,12 @@ def sendRequest():
     
     add_response_label("Se asteapta raspunsurile... ")
     
-    root.after(100, check_for_responses)
+    root.after(200, check_for_responses)
 
 
+# din ce am inteles, asta trimite urmatoarea cerere din MIB
+# adica, daca noi am cerut CPU Load, daca apasam pe SendNextRequest va fi CPU Temperature,
+# adica urmatorul din dictionar
 def SendNextRequest():
     global response_row, responses_received
     
@@ -151,7 +156,8 @@ def SendNextRequest():
     
     root.after(100, check_for_responses)
 
-
+# am introdus eu entry-ul pentru a seta threshold-urile 
+# modifica functia asta, ca sa trimita si mib-ul si valoarea pe care vrem s-o setam
 def setRequest():
     global response_row, responses_received
     
@@ -175,3 +181,6 @@ next_button.grid(row=0, column=2)
 set_button.grid(row=0, column=3)
 
 root.mainloop()
+
+## trebuie sa imi dau seama de ce nu primesc raspunsurile imediat cum le trimit,
+## merge doar daca apas butonul de Send Request din nou
