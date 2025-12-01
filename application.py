@@ -4,12 +4,12 @@ import select
 from tkinter import *
 
 # configurarea adreselor/porturilot agentilor
-AGENT_1_ADDR = ('127.0.0.1', 161)         #laptop felicia
-AGENT_2_ADDR = ('127.0.0.2', 161)         #laptop georgiana
+AGENT_1_ADDR = ('127.0.0.1', 161)         #laptop felicia,   ip : 10.107.11.160
+AGENT_2_ADDR = ('127.0.0.2', 161)         #laptop georgiana, ip : 10.107.11.199
 
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-manager_socket.bind(('0.0.0.0', 0)) 
+manager_socket.bind(('0.0.0.0', 161)) 
 manager_socket.setblocking(False) 
 
 # configurarea MIB-ului
