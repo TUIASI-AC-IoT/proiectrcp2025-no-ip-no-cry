@@ -32,8 +32,9 @@ _Simple Network Management Protocol_ (SNMP, ro. : “Protocolul Simplu de Admini
     
     STRUCTURA INFORMAȚIILOR DIN MIB 
 	
-  Structura informțiilor de management (SMI) este  un standard SNMP care  definește structura informațiilor din MIB si tipul de date premise. SMI identifică modul în care resursele din MIB sunt reprezentate și denumite. Specificația SNMP include un șablon, cunoscut sub numele de ASN1, care oferă modelul formal pentru definirea  obiectelor și a tabelelor de obiecte din MIB. Pentru a defini un MIB sunt folosite următoarele cuvinte cheie:
+  Structura informțiilor de management (SMI) este un standard SNMP care definește structura informațiilor din MIB si tipul de date premise. SMI identifică modul în care resursele din MIB sunt reprezentate și denumite. Specificația SNMP include un șablon, cunoscut sub numele de ASN1, care oferă modelul formal pentru definirea obiectelor și a tabelelor de obiecte din MIB. Pentru a defini un MIB sunt folosite următoarele cuvinte cheie:
   
+  #.. nu inteleg care-i legatura, noi folosim un dictionar pe post de mib
   
   _**	 Syntax**_ : definește o structură abstractă de date corespunzătoare tipului de obiecte;
  SMI restricționează construcțiile ASN1 în mod intenționat pentru a menține simplitatea ;
@@ -43,14 +44,14 @@ _Simple Network Management Protocol_ (SNMP, ro. : “Protocolul Simplu de Admini
   _**	Description**_ : conține definiția tipului de obiect și oferă toate explicațiile semantice necesare pentru interpretare .  
 
     IDENTIFICATORII DE OBIECTE MIB (MIB Object Identifiers)
-  Fiecare obiect din MIB are asociat un identificator de obiect – OID, pe care stația de management îl folosește pentru a solicita valoarea obiectului de la agent.  Un OID este o secvență de întregi care identifică în mod unic un obiect administrat, definind o cale către acel obiect printr-o structură ierarhică de tip arbore, numită arbore OID sau arbore de înregistrare. 
+  Fiecare obiect din MIB are asociat un identificator de obiect – OID, pe care stația de management îl folosește pentru a solicita valoarea obiectului de la agent. Un OID este o secvență de întregi care identifică în mod unic un obiect administrat, definind o cale către acel obiect printr-o structură ierarhică de tip arbore, numită arbore OID sau arbore de înregistrare. 
   
    În momentul în care un agent SNMP trebuie să acceseze un anumit obiect administrat, acesta parcurge arborele OID pentru a găsi obiectul. O viziune de ansamblu asupra acestui concept o putem observa în figura de mai jos :
 ![manager_agent](https://github.com/user-attachments/assets/a97064b1-b4a4-4360-9bb8-329a3607876d)
 
 
 
-	MIB-ul este scris în notația ASN.1 ( Abstract Syntax Notation 1) 
+	MIB-ul este scris în notația ASN.1 ( Abstract Syntax Notation 1 ) 
 
    ASN.1 este o notație standard întreținută de ISO (Organizația Internațională pentru Standardizare) și utilizată în domenii variate, de la World Wide Web până la sisteme de control al aviației. Toată comunicația SNMP depinde de faptul că toate dispozitivele trebuie să înțeleagă mesajele SNMP, ceea ce ridică câteva probleme tehnice.
 
@@ -123,6 +124,7 @@ Sub această ramură se găsesc:
 
 
 Prin această ierarhie, este asigurată:
+
 •	unicitatea globală a fiecărui parametru monitorizat;
 
 •	compatibilitatea între sisteme diferite;
@@ -241,7 +243,7 @@ Prin această ierarhie, este asigurată:
 
 			1.	Introducere 
 		
-   Proiectul  realizat își propune să demonstreze principiile de funcționare ale protocolului SNMPv1 (Simple Network Management Protocol) prin implementarea unei aplicații complete, formată dintr-un agent SNMP și un manager SNMP, utilizând exclusiv modulul socket pentru comunicația în rețea:
+   Proiectul  realizat își propune să demonstreze principiile de funcționare ale protocolului SNMPv1 (Simple Network Management Protocol) prin implementarea unei aplicații complete, formată din mai multe instanțe de tip agent SNMP și un manager SNMP, utilizând exclusiv modulul socket pentru comunicația în rețea:
    
    _Agent SNMP_ – rulează pe sistemul monitorizat, colectează informații despre resurse și le expune printr-un MIB intern;
 	
@@ -282,24 +284,30 @@ Alte module importante pe care le vom folosi pe parcursul acestui proiect sunt:
 
 - **time** - folosit pentru timestampuri, timeout-uri in comunicația UDP și măsurarea timpului de up-time al sistemului (sysUpTime din MIB).
 
+-**psutil** și **wmi** - folosite pentru extragerea de informații despre hardware-ul laptop-ului.
+
+-**select** - folosit pentru asigurarea transferului de date de la manager spre agent și vice-versa.
+
+-**tkinter** - folosit pentru interfața grafică.
+
 
 
 
 
 			2.	Motivația proiectului 
 			
-   Monitorizarea sistemelor și gestionarea eficientă a resurselor reprezintă elemente esențiale în administrarea rețelelor . SNMP este unul dintre cele mai utilizate protocoale în acest domeniu, fiind implementat în routere, servere, switch-uri, echipamente de telecomunicații și multe alte dispozitive inteligente.
+   Monitorizarea sistemelor și gestionarea eficientă a resurselor reprezintă elemente esențiale în administrarea rețelelor. SNMP este unul dintre cele mai utilizate protocoale în acest domeniu, fiind implementat în routere, servere, switch-uri, echipamente de telecomunicații și multe alte dispozitive inteligente.
    
 
 Proiectul nostru urmărește familiarizarea cu funcționarea concretă a SNMP prin dezvoltarea unei aplicații de la zero, pentru înțelegerea următoarelor elemente :
 
--	Codificarea și transmiterea  pachetelor SNMP prin rețea ;
+-	Codificarea și transmiterea  pachetelor SNMP prin rețea;
   
--	Structurarea MIB-urilor, OID-urilor ;
+-	Structurarea MIB-urilor, OID-urilor;
   
 -	Rolul mesajelor specifice SNMPv1 (Get, GetNext, Set, Response, Trap);
   
--	Interacțiunea dintre un manager și mai mulți agenți .
+-	Interacțiunea dintre un manager și mai mulți agenți.
   
 
 			3.Obiectivele proiectului
@@ -364,9 +372,9 @@ Cererea include OID-ul obiectului și versiunea protocolului ;
 
        **Rolul Trap-urilor** :
   	
-	Permite notifucarea managerului fără ca acesta să interogheze explicit agentul ;
+	Permite notificarea managerului fără ca acesta să interogheze explicit agentul;
 
-	Detectare rapidă a situațiilor critice ;
+	Detectare rapidă a situațiilor critice;
 
 	Simulează un sistem real de monitorizare de rețea .
 ![diagrama_rc](https://github.com/user-attachments/assets/fe7ea21f-2072-4e60-8904-6874d7acde3e)
@@ -389,7 +397,7 @@ Sub această categorie sunt incluse Trap-urile definite în ramura:
 1.3.6.1.4.1.2.6.258.0.x
 
 	
-   _4.Specific-trap_ ( devine relevant doar atunci când generic-trap =6)   - este un număr de tip întreg ce diferențiază evenimentele proprii definite , de exemplu :
+   _4.Specific-trap_ ( devine relevant doar atunci când generic-trap =6) - este un număr de tip întreg ce diferențiază evenimentele proprii definite , de exemplu :
    
 	1- > depășire prag temperatură
 
@@ -402,12 +410,12 @@ Sub această categorie sunt incluse Trap-urile definite în ramura:
 
 			Trap-urile din  cadrul proiectului  : vom defini 5 trap-uri specifice, în funcție de resursele monitorizate :
 			
-		Specific- trap :
+		Specific - trap :
 	1 – depășirea pragului de temperatură;
-	2 – depășirea pragului pentru CPU;
+	2 – depășirea pragului de utilizare pentru CPU;
 	3 – consum ridicat de memorie;
 	4 – spațiu insuficient pe disc;
-	5 – rată de pachete pierdute – peste prag .
+	5 – rată de download/upload scăzut.
 
 
 		
@@ -429,22 +437,24 @@ Sub această categorie sunt incluse Trap-urile definite în ramura:
 _1.	CPU Load (Încărcarea procesorului)_
    
 -	Este o valoare exprimată în procente (0-100%) ce semnifică nivelul de utilizare al procesorului ;
+
+_2.	CPU Temperature (Temperatura procesorului)_
+ 	
+-	Poate fi raportată în 3 unități de măsură : °C, °F sau °K, conform opțiunii selectate printr-o intrare suplimentară în MIB.
 	
-_2.	Memory usage (Memoria utilizată)_
+_3.	Memory usage (Memoria utilizată)_
  	
 -	Procentul RAM utilizat în momentul preluării;
 
-_3.	Disk Usage (Spațiul utilizat pe disc)_
+_4.	Disk Usage (Spațiul utilizat pe disc)_
  	
 -	Este o valoare exprimată în procente ce indică gradul de ocupare al discului ;
 	
-_4.	NetworkLoad (Traficul/Încărcarea rețelei)_
+_5.	Network Load (Traficul/Încărcarea rețelei)_
  	
--	Este o valoare exprimată în procente ce reflectă activitatea interfeței într-un interval scurt ;
+-	Sunt 2 valori exprimate în KB/s care reprezintă viteza de descărcare, respectiv încărcare a datelor în rețea;
 
-_5.	System Temperature (Temperatura sistemului)_
- 	
--	Poate fi raportată în 3 unități de măsură : °C, °F sau °K, conform opțiunii selectate printr-o intrare suplimentară în MIB.
+
 
 
 
@@ -455,20 +465,20 @@ _5.	System Temperature (Temperatura sistemului)_
 
 – returnează temperatura convertită în unitatea de măsură selectată;
 
-- are următorul format :1.3.6.1.4.1.9999.1.3.0 – systemTemperature ;
+- are următorul format : 1.1.2 – systemTemperature ;
 
 
 _b) Intrare în MIB pentru unitatea de măsură_
   
-– permite managerului să trimită un mesaj SNMP Set pentru a modifica unitatea : 1.3.6.1.4.1.9999.1.3.1 – temperatureUnit;
+– permite managerului să trimită un mesaj SNMP Set pentru a modifica unitatea : 1.1.2.x – temperatureUnit;
 
 - pentru cele 3 unități de măsură, avem 3 sufixe diferite la nivelul MIB-ului
   
-	1.3.6.1.4.1.9999.1.3.1 – grade Celsius
+	1.1.2.1 – grade Celsius
   
-	1.3.6.1.4.1.9999.1.3.2 – grade Fahrenheit
+	1.1.2.2 – grade Fahrenheit
   
-	1.3.6.1.4.1.9999.1.3.3 – grade Kelvin
+	1.1.2.3 – grade Kelvin
   
 
 
@@ -478,28 +488,28 @@ _b) Intrare în MIB pentru unitatea de măsură_
 				Structura MIB-ului pentru resursele monitorizate 
 	 Arborele MIB utilizat în cadrul proiectului nostru este construit  începând cu ramura principală, și continuând cu ramura privată : 1.3.6.1(aparțin ramurii principale).4.1.9999(aparțin ramurii private ).În partea de jos a acestei ramuri , 1.3.6.1.4.1.9999, sunt conținute valorile MIB-urilor pentru resursele monitorizate :
   
-		1.3.6.1.4.1.9999.1.1	-> cpuUsage
+		1.1.1	-> cpuLoad
 		
-		1.3.6.1.4.1.9999.1.2	-> memoryUsage
+		1.1.2   -> cpuTemperature 
 		
-		1.3.6.1.4.1.9999.1.3.0 -> systemTemperature 
+		1.1.2.x -> temperatureUnit
+
+		1.2.1	-> ramUsage
 		
-		1.3.6.1.4.1.9999.1.3.1 -> temperatureUnit
+		1.2.2   -> diskUsage 
 		
-		1.3.6.1.4.1.9999.1.4 -> diskUsage 
-		
-		1.3.6.1.4.1.9999.1.5 -> networkLoad
+		1.3.1   -> networkLoad
 
   
 
-| **OID numeric**           |**Obiect**           | **Tip ASN**1 | **Acces**    | **Descriere**                                     |
-|------------------------|-------------------|----------|-----------|------------------------------------------------|
-| 1.3.6.1.4.1.9999.1.1   | cpuUsage          | Integer  | read-only | Utilizare procesor (%)                         |
-| 1.3.6.1.4.1.9999.1.2   | memoryUsage       | Integer  | read-only | Utilizare memorie (%)                          |
-| 1.3.6.1.4.1.9999.1.3.0 | systemTemperature | Integer  | read-only | Temperatura convertită în u.m. selectată       |
-| 1.3.6.1.4.1.9999.1.3.1 | temperatureUnit   | Integer  | read-write| Unitatea de măsură (1= °C, 2= °F, 3= °K)       |
-| 1.3.6.1.4.1.9999.1.4   | diskUsage         | Integer  | read-only | Spațiul de pe disc utilizat (%)                |
-| 1.3.6.1.4.1.9999.1.5   | networkLoad       | Integer  | read-only | Traficul de rețea (%)                          |
+| **OID numeric**        |**Obiect**         | **Tip ASN**1 | **Acces** | **Descriere**                                  |
+|------------------------|-------------------|--------------|-----------|------------------------------------------------|
+| 1.1.1   				 | cpuUsage          | Integer      | read-only | Utilizare procesor (%)                         |
+| 1.1.2   				 | cpuTemperature    | Integer      | read-only | Temperatura convertită în u.m. selectată       |
+| 1.1.2.x 				 | temperatureUnit   | Integer      | read-write| Unitatea de măsură (1=°C, 2=°F, 3=°K)          |
+| 1.2.1   				 | ramUsage          | Integer      | read-only | Utilizare memorie (%)                          |
+| 1.2.2    				 | diskUsage         | Integer      | read-only | Spațiul de pe disc utilizat (%)                |
+| 1.3.1   				 | networkLoad       | Integer      | read-only | Viteza de download / upload (KB/s)             |
 
 
 
