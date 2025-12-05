@@ -4,6 +4,7 @@ import sys
 import wmi
 import psutil
 import time
+import threading
 
 def get_wifi_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -102,8 +103,7 @@ def get_disk_usage_psutil():
     except Exception as e:
         return f"Eroare: {e}"
     
-## aici trebuie adaugata o functie pentru setarea valorilor primite de la manager
-## si inca o functie pentru trimiiterea trap-urilor in caz de depasire 
+
 
 AGENT_PORT = 161
 AGENT_IP = '127.0.0.1'  #get_wifi_ip()
@@ -113,6 +113,130 @@ AGENT_IP = '127.0.0.1'  #get_wifi_ip()
 ## sa fie de genu threshold_cpu_load = 80  # procentaj
 ## sau threshold_temp = 75  # grade Celsius si tot asa
 
+
+
+#### AM COMPLETAT CU THRESHOLD (completat de geo )====
+#variabile globale
+THRESHOLD_CPU_LOAD = 85  #  procente
+THRESHOLD_RAM = 80       #  procente
+THRESHOLD_DISK = 90      #  procente
+THRESHOLD_TEMP = 75      #  grade Celsius
+THRESHOLD_NET = 90       # in procente
+
+
+# Adresa de trap a managerului
+TRAP_MANAGER_IP = '10.107.11.1' #IP MANAGER
+TRAP_MANAGER_PORT = 162
+ENTERPRISE_OID = '1.3.6.1.4.1.2.6.258'
+
+
+
+## aici trebuie adaugata o functie pentru setarea valorilor primite de la manager
+# COMPLETAT -GEO
+def set_thresholds_from_manager(message):
+    global THRESHOLD_CPU_LOAD
+    global THRESHOLD_RAM
+    global THRESHOLD_DISK
+    global THRESHOLD_TEMP
+    global THRESHOLD_NET
+
+    try:
+        lista = message.replace("SET THRESHOLD", "").strip().split()
+
+        # lista de forma cheie-valoare
+        for item in lista:
+            key, value = item.split("=")
+            value = float(value)
+
+            if key == "CPU":
+                THRESHOLD_CPU_LOAD = value
+            elif key == "RAM":
+                THRESHOLD_RAM = value
+            elif key == "DISK":
+                THRESHOLD_DISK = value
+            elif key == "TEMP":
+                THRESHOLD_TEMP = value
+            elif key == "NET":
+                THRESHOLD_NET = value
+
+        print("[THRESHOLD UPDATE] Praguri actualizate:")
+        print(f" CPU={THRESHOLD_CPU_LOAD}%")
+        print(f" RAM={THRESHOLD_RAM}%")
+        print(f" DISK={THRESHOLD_DISK}%")
+        print(f" TEMP={THRESHOLD_TEMP}°C")
+        print(f" NET={THRESHOLD_NET}%")
+
+    except Exception as e:
+        print(f"Eroare la setarea pragurilor: {e}")
+
+
+
+
+ ## Functie pentru trimiterea trap-urilor - Geo
+def send_trap(specific, description, value):
+    trap = (
+        f"SNMPv1-TRAP | "
+        f"Enterprise={ENTERPRISE_OID} | "
+        f"Agent={AGENT_IP} | "
+        f"Generic=6 | "
+        f"Specific={specific} | "
+        f"{description} | "
+        f"Value={value}"
+    )
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.sendto(trap.encode(), (TRAP_MANAGER_IP, TRAP_MANAGER_PORT))
+    s.close()
+
+    print(f"[TRAP SENT] {trap}")
+
+
+# Functie pentru monitorizarea pragurilor - Geo
+
+def monitorizare_thresholds():
+    while True :
+
+        #CPU LOAD
+        cpu_load = get_cpu_load_wmi()
+        if cpu_load:
+            cpu_val = int(cpu_load.replace("%", ""))
+            if cpu_val > THRESHOLD_CPU_LOAD:
+                send_trap(
+                    2,
+                    "CPU load depaseste pragul",
+                    f"{cpu_val}%"
+                )
+
+        #RAM
+        ram = get_ram_usage_wmi()
+        if ram:
+            procent = float(ram.split('(')[-1].replace('%)', ''))
+            if procent > THRESHOLD_RAM:
+                send_trap(3, "RAM peste prag",
+                               f"{procent :.2f}%")
+
+
+        # DISK
+        disk = get_disk_usage_psutil()
+        if disk:
+            procent = float(disk.split('(')[-1].replace('%)', ''))
+            if procent > THRESHOLD_DISK:
+                send_trap(4, "Disk aproape plin",
+                               f"{procent:.2f}%")
+
+        # TEMP
+        temp = get_cpu_temp_wmi("Celsius")
+        if temp:
+            t = float(temp.replace("°C", ""))
+            if t > THRESHOLD_TEMP:
+                send_trap(1, "Temperatura CPU ridicata", temp)
+
+        time.sleep(5)
+##################
+
+
+
+
 print(f"Agent IP: {AGENT_IP}")
 
 #crearea socket-ului UDP pentru agent
@@ -121,6 +245,10 @@ agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 #legarea socket-ului la adresa agentului
 try:
     agent_socket.bind((AGENT_IP, 161))
+    #adaugat - geo
+    threading.Thread(target=monitorizare_thresholds, daemon=True).start()
+
+
 except OSError as e:
     sys.exit(1)
 
@@ -163,6 +291,10 @@ try:
             case "Disk":
                 disk_usage = get_disk_usage_psutil()
                 response_data = f"Response: Disk Usage = {disk_usage}".encode('utf-8')
+
+            case _ if request_msg.startswith("SET THRESHOLD"):
+                set_thresholds_from_manager(request_msg)
+                response_data = b"Threshold-uri actualizate cu succes"
 
             case "close":
                 print("Inchidere...")

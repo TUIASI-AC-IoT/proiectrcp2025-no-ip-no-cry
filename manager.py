@@ -6,10 +6,22 @@ import select
 AGENT_1_ADDR = ('10.107.11.160', 161)         #laptop felicia
 AGENT_2_ADDR = ('10.107.11.199', 161)         #laptop georgiana
 
+## GEO
+TRAP_PORT = 162
+
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 manager_socket.bind(('0.0.0.0', 0))
-manager_socket.setblocking(False) 
+manager_socket.setblocking(False)
+
+## GEO
+## socket pentru Traps
+trap_socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+trap_socket.bind(('0.0.0.0', TRAP_PORT))
+trap_socket.setblocking(False)
+print(f"Managerul asculta TRAP-urile pe portul {TRAP_PORT}")
+
+
 
 print(f"Managerul asculta pe portul local: {manager_socket.getsockname()[1]}") 
 
@@ -32,20 +44,21 @@ print(f"\nAstept raspunsuri de la cei {expected_responses} agenti...\n")
 
 
 while True:
-
     try:
-        
-        ready_to_read, _, _ = select.select([manager_socket], [], [], None) 
-        
+        ready_to_read, _, _ = select.select(
+            [manager_socket, trap_socket],
+            [], [], None
+        )
+
         if manager_socket in ready_to_read:
 
             data, addr = manager_socket.recvfrom(1024)
 
             # raspunsul primit de la agent
             response_msg = data.decode()
-            
+
             print(f"--- [RECV] Raspuns primit de la {addr} ---")
-            
+
             if addr == AGENT_1_ADDR and "CPU Temperature" in response_msg:
                 print(f"Temperatura agentului 1: {response_msg.split('=')[-1].strip()}")
             elif addr == AGENT_2_ADDR:
@@ -55,7 +68,16 @@ while True:
 
             responses_received += 1
 
+        # ---- TRAP-URI receptionate -----(Geo)
+        if trap_socket in ready_to_read:
+            trap_data, trap_addr = trap_socket.recvfrom(1024)
+            print("\n [TRAP PRIMIT]")
+            print(f"De la agent: {trap_addr}")
+            print(trap_data.decode())
+
     except KeyboardInterrupt:
         print("\nManagerul oprit de utilizator.")
         manager_socket.close()
+        trap_socket.close()
         print("Managerul s-a inchis.")
+        break
