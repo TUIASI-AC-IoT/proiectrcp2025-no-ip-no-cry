@@ -7,10 +7,20 @@ from tkinter import *
 AGENT_1_ADDR = ('127.0.0.1', 161)         #laptop felicia,   ip : 10.107.11.160
 AGENT_2_ADDR = ('127.0.0.2', 161)         #laptop georgiana, ip : 10.107.11.199
 
+## GEO
+TRAP_PORT = 162
+
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 manager_socket.bind(('0.0.0.0', 161)) 
 manager_socket.setblocking(False) 
+
+## GEO
+## socket pentru Traps
+trap_socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+trap_socket.bind(('0.0.0.0', TRAP_PORT))
+trap_socket.setblocking(False)
+print(f"Managerul asculta TRAP-urile pe portul {TRAP_PORT}")
 
 # configurarea MIB-ului
 mib = {
@@ -119,6 +129,14 @@ def check_for_responses():
                 root.after(100, check_for_responses)
             else:
                 responses_received = 0
+
+        # ---- TRAP-URI receptionate -----(Geo)
+        if trap_socket in ready_to_read:
+            trap_data, trap_addr = trap_socket.recvfrom(1024)
+            print("\n [TRAP PRIMIT]")
+            print(f"De la agent: {trap_addr}")
+            print(trap_data.decode())
+            
     except Exception as e:
         print(f"Eroare la primirea raspunsului: {e}")
         root.after(100, check_for_responses)
