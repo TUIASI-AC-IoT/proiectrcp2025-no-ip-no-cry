@@ -212,11 +212,16 @@ def monitorizare_thresholds():
 
         #RAM 
         ram = get_ram_usage_wmi()
-        if ram:
-            procent = float(ram.split('(')[-1].replace('%)', ''))
+        if ram and "(" in ram:
+            procent_string = ram.split('(')[-1].replace('%)', '').strip()
+            procent = float(procent_string)
+
             if procent > THRESHOLD_RAM:
-                send_trap(3, "RAM peste prag",
-                               f"{procent :.2f}%")
+                send_trap(
+                    3,
+                    "RAM peste prag",
+                    f"{procent:.2f}%"
+                )
 
 
         # DISK
