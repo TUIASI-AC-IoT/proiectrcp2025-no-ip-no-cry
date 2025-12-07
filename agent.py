@@ -127,7 +127,7 @@ THRESHOLD_NET = 90       # in procente
 # Adresa de trap a managerului
 TRAP_MANAGER_IP = '10.107.11.1' #IP MANAGER
 TRAP_MANAGER_PORT = 162
-ENTERPRISE_OID = '1.3.6.1.4.1.2.6.258'
+
 
 
 
@@ -176,7 +176,6 @@ def set_thresholds_from_manager(message):
 def send_trap(specific, description, value):
     trap = (
         f"SNMPv1-TRAP | "
-        f"Enterprise={ENTERPRISE_OID} | "
         f"Agent={AGENT_IP} | "
         f"Generic=6 | "
         f"Specific={specific} | "
