@@ -121,7 +121,7 @@ THRESHOLD_CPU_LOAD = 85  #  procente
 THRESHOLD_RAM = 80       #  procente
 THRESHOLD_DISK = 90      #  procente
 THRESHOLD_TEMP = 75      #  grade Celsius
-THRESHOLD_NET = 90       # in procente
+THRESHOLD_NET = 90       #  in procente
 
 
 # Adresa de trap a managerului
@@ -206,7 +206,7 @@ def monitorizare_thresholds():
                     f"{cpu_val}%"
                 )
 
-        #RAM
+        #RAM 
         ram = get_ram_usage_wmi()
         if ram:
             procent = float(ram.split('(')[-1].replace('%)', ''))
