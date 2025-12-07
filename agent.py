@@ -5,6 +5,8 @@ import wmi
 import psutil
 import time
 import threading
+import os
+import pythoncom
 
 def get_wifi_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,32 +29,29 @@ def get_cpu_temp_wmi(tip = "Celsius"):
         temperatures = w.MSAcpi_ThermalZoneTemperature()
 
         if not temperatures:
-             print("Eroare la citirea temperaturii CPU.")
-             return
+            return None
         
-        print("Temperaturile citite :")
+        temp = temperatures[0]
 
-        for temp in temperatures:
+        if tip == "Celsius":
+            temp_val = (temp.CurrentTemperature / 10.0) - 273.15
+            temp_str = f"{temp_val:.2f}°C"
+            print(f"- Valoarea in Celsius: {temp_str}")
 
-            if tip == "Celsius":
-                temp_celsius = (temp.CurrentTemperature / 10.0) - 273.15
-                temp_str = f"{temp_celsius:.2f}°C"
-                print(f"- Valoarea in Celsius: {temp_str}")
+        elif tip == "Fahrenheit":
+            temp_val = ((temp.CurrentTemperature / 10.0) - 273.15) * 9/5 + 32
+            temp_str = f"{temp_val:.2f}°F"
+            print(f"- Valoarea in Fahrenheit: {temp_str}")
 
-            elif tip == "Fahrenheit":
-                temp_fahrenheit = ((temp.CurrentTemperature / 10.0) - 273.15) * 9/5 + 32
-                temp_str = f"{temp_fahrenheit:.2f}°F"
-                print(f"- Valoarea in Fahrenheit: {temp_str}")
+        elif tip == "Kelvin":
+            temp_val = temp.CurrentTemperature / 10.0
+            temp_str = f"{temp_val:.2f}°K"
+            print(f"- Valoarea in Kelvin: {temp_str}")
 
-            elif tip == "Kelvin":
-                temp_kelvin = temp.CurrentTemperature / 10.0
-                temp_str = f"{temp_kelvin:.2f}°K"
-                print(f"- Valoarea in Kelvin: {temp_str}")
-
-            return temp_str
+        return round(float(temp_val),2)
 
     except Exception as e:
-        print(f"Eroare: {e}")
+        return None
 
 def get_cpu_load_wmi():
     try:
@@ -60,7 +59,7 @@ def get_cpu_load_wmi():
         cpu_loads = w.Win32_Processor()
         for cpu in cpu_loads:
             print(f"- Valoarea: {cpu.LoadPercentage}%")
-            return f"{cpu.LoadPercentage}%"
+            return round(float(cpu.LoadPercentage), 2)
     except Exception as e:
         print(f"Eroare: {e}")
 
@@ -75,7 +74,7 @@ def get_network_load_psutil():
         
         return f"Upload: {upload:.1f} KB/s, Download: {download:.1f} KB/s"
     except Exception as e:
-        return f"Eroare: {e}"
+        return None
 
 def get_ram_usage_wmi():
     try:
@@ -86,11 +85,10 @@ def get_ram_usage_wmi():
         free_ram = int(os_info.FreePhysicalMemory) / 1024
         used_ram = total_ram - free_ram
         ram_usage_percent = (used_ram / total_ram) * 100
-        ram_usage_str = f"{used_ram:.2f} MB / {total_ram:.2f} MB ({ram_usage_percent:.2f}%)"
 
-        return ram_usage_str
+        return round(float(ram_usage_percent), 2)
     except Exception as e:
-        return f"Eroare: {e}"
+        return None
     
 def get_disk_usage_psutil():
     try:
@@ -99,14 +97,15 @@ def get_disk_usage_psutil():
         total = disk_usage.total / (1024 ** 3)
         percent = disk_usage.percent
         disk_usage_str = f"{used:.2f} GB / {total:.2f} GB ({percent:.2f}%)"
-        return disk_usage_str
+        print(f"Disk Usage: {disk_usage_str}%")
+        return round(float(percent), 2)
     except Exception as e:
-        return f"Eroare: {e}"
+        return None
     
 
 
 AGENT_PORT = 161
-AGENT_IP = '127.0.0.1'  #get_wifi_ip()
+AGENT_IP = '127.0.0.2'  #get_wifi_ip()
 
 ## poti sa initializezi aici variabilele globale pentru threshold-uri, daca vrei
 ## sa le avem pe toate la un loc
@@ -127,7 +126,7 @@ THRESHOLD_NET = 90       #  in procente
 # Adresa de trap a managerului
 TRAP_MANAGER_IP = '10.107.11.1' #IP MANAGER
 TRAP_MANAGER_PORT = 162
-ENTERPRISE_OID = '1.3.6.1.4.1.2.6.258'
+ENTERPRISE_OID = '1.3.6.1.4.1.2.6.258'      #ce-i asta?
 
 
 
@@ -141,23 +140,23 @@ def set_thresholds_from_manager(message):
     global THRESHOLD_NET
 
     try:
-        lista = message.replace("SET THRESHOLD", "").strip().split()
+        lista = message.replace("SET THRESHOLD", "").strip().split()    # care-i formatul de trimitere a setarii?
 
         # lista de forma cheie-valoare
         for item in lista:
-            key, value = item.split("=")
+            key, value = [item[0], item[2]]
             value = float(value)
 
             if key == "CPU":
-                THRESHOLD_CPU_LOAD = value
+                THRESHOLD_CPU_LOAD = float(value)
             elif key == "RAM":
-                THRESHOLD_RAM = value
+                THRESHOLD_RAM = float(value)
             elif key == "DISK":
-                THRESHOLD_DISK = value
+                THRESHOLD_DISK = float(value)
             elif key == "TEMP":
-                THRESHOLD_TEMP = value
+                THRESHOLD_TEMP = float(value)
             elif key == "NET":
-                THRESHOLD_NET = value
+                THRESHOLD_NET = float(value)
 
         print("[THRESHOLD UPDATE] Praguri actualizate:")
         print(f" CPU={THRESHOLD_CPU_LOAD}%")
@@ -196,40 +195,29 @@ def send_trap(specific, description, value):
 def monitorizare_thresholds():
     while True :
 
+        pythoncom.CoInitialize() 
+
         #CPU LOAD
-        cpu_load = get_cpu_load_wmi()
-        if cpu_load:
-            cpu_val = int(cpu_load.replace("%", ""))
-            if cpu_val > THRESHOLD_CPU_LOAD:
-                send_trap(
-                    2,
-                    "CPU load depaseste pragul",
-                    f"{cpu_val}%"
-                )
+        cpu_val = get_cpu_load_wmi()
+        if cpu_val > THRESHOLD_CPU_LOAD:
+            send_trap(2, "CPU load depaseste pragul", f"{cpu_val}%"
+            )
 
         #RAM 
         ram = get_ram_usage_wmi()
-        if ram:
-            procent = float(ram.split('(')[-1].replace('%)', ''))
-            if procent > THRESHOLD_RAM:
-                send_trap(3, "RAM peste prag",
-                               f"{procent :.2f}%")
+        if ram > THRESHOLD_RAM:
+            send_trap(3, "RAM peste prag", f"{ram :.2f}%")
 
 
         # DISK
         disk = get_disk_usage_psutil()
-        if disk:
-            procent = float(disk.split('(')[-1].replace('%)', ''))
-            if procent > THRESHOLD_DISK:
-                send_trap(4, "Disk aproape plin",
-                               f"{procent:.2f}%")
+        if disk > THRESHOLD_DISK:
+            send_trap(4, "Disk aproape plin", f"{disk:.2f}%")
 
         # TEMP
-        temp = get_cpu_temp_wmi("Celsius")
-        if temp:
-            t = float(temp.replace("°C", ""))
-            if t > THRESHOLD_TEMP:
-                send_trap(1, "Temperatura CPU ridicata", temp)
+        temp_c = get_cpu_temp_wmi("Celsius")
+        if temp_c > THRESHOLD_TEMP:
+            send_trap(1, "Temperatura CPU ridicata", temp_c)
 
         time.sleep(5)
 ##################
@@ -265,12 +253,12 @@ try:
 
         match request_msg:
             case "Temperature Celsius":
-                 temp = get_cpu_temp_wmi("Celsius")
-                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+                temp = get_cpu_temp_wmi("Celsius")
+                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
             case "Temperature Fahrenheit":
-                 temp = get_cpu_temp_wmi("Fahrenheit")
-                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+                temp = get_cpu_temp_wmi("Fahrenheit")
+                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
             case "Temperature Kelvin":
                 temp = get_cpu_temp_wmi("Kelvin")
@@ -302,7 +290,7 @@ try:
                 sys.exit(1)
 
             case _:
-                response_data = f"Eroare: Request necunoscut.".encode('utf-8')
+                response_data = f"Eroare: Request necunoscut. {request_msg}".encode('utf-8')
 
         agent_socket.sendto(response_data, manager_addr)
         print(f"[SEND] Raspuns trimis catre Manager.")

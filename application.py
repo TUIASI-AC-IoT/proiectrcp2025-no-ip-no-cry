@@ -1,6 +1,7 @@
 #importarea modulelor necesare
 import socket
 import select
+import sys
 from tkinter import *
 
 # configurarea adreselor/porturilot agentilor
@@ -20,7 +21,6 @@ manager_socket.setblocking(False)
 trap_socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 trap_socket.bind(('0.0.0.0', TRAP_PORT))
 trap_socket.setblocking(False)
-print(f"Managerul asculta TRAP-urile pe portul {TRAP_PORT}")
 
 # configurarea MIB-ului
 mib = {
@@ -47,9 +47,14 @@ frame_info = LabelFrame(root, text="MIB Tree", padx=20, pady=20)
 frame_up.grid(row=0, column=0, padx=20, pady=10, columnspan=4)
 frame_info.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
 frame_response.grid(row=1, column=1, padx=20, pady=10, sticky="nsew", columnspan=3)
+
 setR = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
-setR.insert(0, "Introduceti valoarea pentru Set Request")
+setR.insert(0, "Introduceti tipul setarii: (Ex: SET THRESHOLD 1.1.1=70)")
 setR.grid(row=0, column=4)
+
+e = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
+e.insert(0, "Introduceti MIB-ul: (ex: pentru CPU Load: '1.1.1')")
+e.grid(row=0, column=0)
 
 #showing the MIB Tree
 system = Label(frame_info, text="^ System (1)", font=("Times New Roman", 12, "bold"))
@@ -81,9 +86,6 @@ net_load.grid(column=0, row=11, sticky="w")
 myLabl = Label(frame_response, text="Managerul asculta pe portul local 161(UDP)... ", font=("Times New Roman", 12), anchor = "w")
 myLabl.grid(column=0, row=0, sticky="w")
 
-e = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
-e.insert(0, "Introduceti MIB-ul: (ex: pentru CPU Load: '1.1.1')")
-e.grid(row=0, column=0)
 
 
 # handling responses
@@ -116,8 +118,8 @@ def check_for_responses():
     global response_row, responses_received
     
     try:
-        ready_to_read, _, _ = select.select([manager_socket], [], [], 0.5)
-        
+        ready_to_read, _, _ = select.select([manager_socket, trap_socket], [], [], 0.5)
+
         if manager_socket in ready_to_read:
             data, addr = manager_socket.recvfrom(1024)
             response_msg = data.decode()
@@ -133,9 +135,9 @@ def check_for_responses():
         # ---- TRAP-URI receptionate -----(Geo)
         if trap_socket in ready_to_read:
             trap_data, trap_addr = trap_socket.recvfrom(1024)
-            print("\n [TRAP PRIMIT]")
-            print(f"De la agent: {trap_addr}")
-            print(trap_data.decode())
+            trap_msg = trap_data.decode()
+            add_response_label(f"Trap primit de la {trap_addr}: {trap_msg}")
+            responses_received += 1
             
     except Exception as e:
         print(f"Eroare la primirea raspunsului: {e}")
@@ -180,13 +182,15 @@ def setRequest():
     global response_row, responses_received
     
     responses_received = 0
+    set_oid = setR.get().replace("SET THRESHOLD", "").strip().split()
+    set_msg = setR.get().replace(set_oid, mib[set_oid[0]])
+    add_response_label(f"Se trimite setarea: {mib[set_oid[0]]}...")
     
-    add_response_label(f"Se trimite setarea: {mib[e.get()]}...")
-    
-    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
-    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
+    manager_socket.sendto(set_msg.encode('utf-8'), AGENT_1_ADDR)
+    manager_socket.sendto(set_msg.encode('utf-8'), AGENT_2_ADDR)
     
     add_response_label("Se asteapta raspunsurile... ")
+    sys.sleep(10)
     
     root.after(100, check_for_responses)
 
