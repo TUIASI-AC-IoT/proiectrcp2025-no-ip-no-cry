@@ -170,18 +170,22 @@ def set_thresholds_from_manager(message):
         print(f"Eroare la setarea pragurilor: {e}")
 
 
+def get_enterprise_oid():
+    return "1.3.6.1.4.1.2.6.258"
 
 
  ## Functie pentru trimiterea trap-urilor - Geo
 def send_trap(specific, description, value):
     trap = (
         f"SNMPv1-TRAP | "
+        f"Enterprise={get_enterprise_oid()} | "
         f"Agent={AGENT_IP} | "
         f"Generic=6 | "
         f"Specific={specific} | "
         f"{description} | "
         f"Value={value}"
     )
+
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.sendto(trap.encode(), (TRAP_MANAGER_IP, TRAP_MANAGER_PORT))
