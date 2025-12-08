@@ -39,9 +39,28 @@ mib_order = [
 ]
 
 # interfata grafica
-
 root = Tk()
 root.title("SNMP v1 - Demonstrative Application")
+
+####
+auto_refresh = False
+refresh_interval = 10000  # milisecunde (10 secunde)
+
+def auto_update():
+    global auto_refresh
+    if not auto_refresh:
+        return
+
+    oid = e.get()
+    if oid not in mib:
+        add_response_label("[ERROR] OID invalid pentru auto-update")
+    else:
+        add_response_label(f"[AUTO] Se trimite cererea: {mib[oid]}...")
+        manager_socket.sendto(mib[oid].encode(), AGENT_1_ADDR)
+        manager_socket.sendto(mib[oid].encode(), AGENT_2_ADDR)
+
+    root.after(refresh_interval, auto_update)
+#####
 
 frame_up = LabelFrame(root, padx=20, pady=20)
 frame_response = LabelFrame(root, text="Responses", padx=20, pady=20)
@@ -50,6 +69,10 @@ frame_info = LabelFrame(root, text="MIB Tree", padx=20, pady=20)
 frame_up.grid(row=0, column=0, padx=20, pady=10, columnspan=4)
 frame_info.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
 frame_response.grid(row=1, column=1, padx=20, pady=10, sticky="nsew", columnspan=3)
+
+interval_entry = Entry(frame_up, width=10, font=("Times New Roman", 12))
+interval_entry.insert(0, "5")  # default 5 secunde
+interval_entry.grid(row=1, column=0)
 
 setR = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
 setR.insert(0, "Introduceti tipul setarii: (Ex: SET THRESHOLD 1.1.1 = 70)")
@@ -89,6 +112,38 @@ net_load.grid(column=0, row=11, sticky="w")
 myLabl = Label(frame_response, text="Managerul asculta pe portul local 161(raspunsuri) si 162(trap-uri)... ", font=("Times New Roman", 12), anchor = "w")
 myLabl.grid(column=0, row=0, sticky="w")
 
+####
+Label(frame_up, text="Interval (sec)", font=("Times New Roman", 12)).grid(row=1, column=1)
+###
+
+def start_auto_refresh():
+    global auto_refresh, refresh_interval
+
+    try:
+        sec = int(interval_entry.get())
+        refresh_interval = sec * 1000
+    except ValueError:
+        add_response_label("[ERROR] Interval invalid")
+        return
+
+    auto_refresh = True
+    add_response_label("[INFO] Actualizare automată pornită")
+    auto_update()
+
+
+def stop_auto_refresh():
+    global auto_refresh
+    auto_refresh = False
+    add_response_label("[INFO] Actualizare automată oprită")
+
+
+ ###
+start_button = Button(frame_up, text="Start Auto Update", font=("Times New Roman", 14), width=20, command=start_auto_refresh)
+stop_button = Button(frame_up, text="Stop Auto Update", font=("Times New Roman", 14), width=20, command=stop_auto_refresh)
+
+start_button.grid(row=1, column=2)
+stop_button.grid(row=1, column=3)
+###
 
 
 # handling responses
