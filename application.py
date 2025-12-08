@@ -102,8 +102,7 @@ response_labels = []
 def add_response_label(text):
     global response_row, response_labels
     
-    new_label = Label(frame_response, text=text,
-                     font=("Times New Roman", 12), anchor="w")
+    new_label = Label(frame_response, text=text, font=("Times New Roman", 12), anchor="w")
     new_label.grid(row=response_row, column=0, sticky="w", pady=2)
     response_row += 1
     
@@ -218,5 +217,7 @@ root.mainloop()
 manager_socket.close()
 trap_socket.close()
 
-## trebuie sa imi dau seama de ce nu primesc raspunsurile imediat cum le trimit,
-## merge doar daca apas butonul de Send Request din nou
+## trebuie adaugat inca un entry de selectare a unitarii de masuru
+## o sa folosesc un combobox din tkinter
+## cu optiunile: Celsius, Fahrenheit, Kelvin
+
