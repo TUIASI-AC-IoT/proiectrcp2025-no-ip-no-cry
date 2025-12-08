@@ -72,15 +72,22 @@ frame_response.grid(row=1, column=1, padx=20, pady=10, sticky="nsew", columnspan
 
 interval_entry = Entry(frame_up, width=10, font=("Times New Roman", 12))
 interval_entry.insert(0, "5")  # default 5 secunde
-interval_entry.grid(row=1, column=0)
+interval_entry.grid(row=1, column=2)
 
 setR = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
 setR.insert(0, "Introduceti tipul setarii: (Ex: SET THRESHOLD 1.1.1 = 70)")
-setR.grid(row=0, column=4)
+setR.grid(row=1, column=0)
 
 e = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
 e.insert(0, "Introduceti MIB-ul: (ex: pentru CPU Load: '1.1.1')")
 e.grid(row=0, column=0)
+
+##
+combo_box = StringVar()
+um_temp = OptionMenu(frame_up, combo_box, "Celsius", "Fahrenheit", "Kelvin")
+combo_box.set("Celsius")  # valoare default
+um_temp.grid(row=1, column=5)
+##
 
 #showing the MIB Tree
 system = Label(frame_info, text="^ System (1)", font=("Times New Roman", 12, "bold"))
@@ -141,8 +148,8 @@ def stop_auto_refresh():
 start_button = Button(frame_up, text="Start Auto Update", font=("Times New Roman", 14), width=20, command=start_auto_refresh)
 stop_button = Button(frame_up, text="Stop Auto Update", font=("Times New Roman", 14), width=20, command=stop_auto_refresh)
 
-start_button.grid(row=1, column=2)
-stop_button.grid(row=1, column=3)
+start_button.grid(row=0, column=4)
+stop_button.grid(row=0, column=5)
 ###
 
 
@@ -197,6 +204,15 @@ def sendRequest():
     global e
     
     oid = e.get()
+
+    if oid == "1.1.2":
+        unitate = combo_box.get()
+        if unitate == "Celsius":
+            oid = "1.1.2.1"
+        elif unitate == "Fahrenheit":
+            oid = "1.1.2.2"
+        elif unitate == "Kelvin":
+            oid = "1.1.2.3"
     
     add_response_label(f"Se trimite cererea: {mib[oid]}...")
     
