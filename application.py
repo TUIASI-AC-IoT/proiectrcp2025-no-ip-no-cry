@@ -42,7 +42,7 @@ mib_order = [
 root = Tk()
 root.title("SNMP v1 - Demonstrative Application")
 
-####
+#variabile pentru actualizare automata
 auto_refresh = False
 refresh_interval = 10000  # milisecunde (10 secunde)
 
@@ -60,7 +60,7 @@ def auto_update():
         manager_socket.sendto(mib[oid].encode(), AGENT_2_ADDR)
 
     root.after(refresh_interval, auto_update)
-#####
+
 
 frame_up = LabelFrame(root, padx=20, pady=20)
 frame_response = LabelFrame(root, text="Responses", padx=20, pady=20)
@@ -82,12 +82,12 @@ e = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
 e.insert(0, "Introduceti MIB-ul: (ex: pentru CPU Load: '1.1.1')")
 e.grid(row=0, column=0)
 
-##
+##Combobox pentru u.m. ale temperaturii
 combo_box = StringVar()
 um_temp = OptionMenu(frame_up, combo_box, "Celsius", "Fahrenheit", "Kelvin")
 combo_box.set("Celsius")  # valoare default
 um_temp.grid(row=1, column=5)
-##
+
 
 #showing the MIB Tree
 system = Label(frame_info, text="^ System (1)", font=("Times New Roman", 12, "bold"))
@@ -119,9 +119,9 @@ net_load.grid(column=0, row=11, sticky="w")
 myLabl = Label(frame_response, text="Managerul asculta pe portul local 161(raspunsuri) si 162(trap-uri)... ", font=("Times New Roman", 12), anchor = "w")
 myLabl.grid(column=0, row=0, sticky="w")
 
-####
+
 Label(frame_up, text="Interval (sec)", font=("Times New Roman", 12)).grid(row=1, column=1)
-###
+
 
 def start_auto_refresh():
     global auto_refresh, refresh_interval
@@ -144,13 +144,12 @@ def stop_auto_refresh():
     add_response_label("[INFO] Actualizare automată oprită")
 
 
- ###
+
 start_button = Button(frame_up, text="Start Auto Update", font=("Times New Roman", 14), width=20, command=start_auto_refresh)
 stop_button = Button(frame_up, text="Stop Auto Update", font=("Times New Roman", 14), width=20, command=stop_auto_refresh)
 
 start_button.grid(row=0, column=4)
 stop_button.grid(row=0, column=5)
-###
 
 
 # handling responses
@@ -175,6 +174,9 @@ def add_response_label(text):
             label.grid(row=idx + 1, column=0, sticky="w", pady=2)
         
         response_row = len(response_labels) + 1
+
+
+
 
 def check_for_responses():    
     while True:
@@ -223,9 +225,7 @@ def sendRequest():
     
 
 
-# din ce am inteles, asta trimite urmatoarea cerere din MIB
-# adica, daca noi am cerut CPU Load, daca apasam pe SendNextRequest va fi CPU Temperature,
-# adica urmatorul din dictionar
+#  trimite urmatoarea cerere din MIB
 def SendNextRequest():
     global e
     
@@ -260,11 +260,9 @@ def SendNextRequest():
     add_response_label("Se asteapta raspunsurile... ")
 
 
-# am introdus eu entry-ul pentru a seta threshold-urile 
-# modifica functia asta, ca sa trimita si mib-ul si valoarea pe care vrem s-o setam
+
 def setRequest():
     global setR
-    
     set_command = setR.get().strip()
 
     parts = set_command.replace("SET THRESHOLD", "").strip().split("=")
@@ -305,7 +303,5 @@ root.mainloop()
 manager_socket.close()
 trap_socket.close()
 
-## trebuie adaugat inca un entry de selectare a unitarii de masuru
-## o sa folosesc un combobox din tkinter
-## cu optiunile: Celsius, Fahrenheit, Kelvin
+
 
