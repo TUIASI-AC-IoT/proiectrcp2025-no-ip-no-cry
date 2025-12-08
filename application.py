@@ -187,7 +187,7 @@ def check_for_responses():
                 
                 root.after(0, add_response_label, f"[RESPONSE] {addr[0]}:{addr[1]} : {response_msg}")
 
-            # ---- TRAP-URI receptionate -----(Geo)
+            # - TRAP-URI receptionate -
             if trap_socket in ready_to_read:
                 data, addr = trap_socket.recvfrom(1024)
                 trap_msg = data.decode()
