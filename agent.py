@@ -22,6 +22,7 @@ def get_wifi_ip():
 # functia pentru obtinerea temperaturii CPU folosind WMI
 def get_cpu_temp_wmi(tip = "Celsius"):
     try:
+        pythoncom.CoInitialize()
         # conectarea la WMI
         w = wmi.WMI(namespace="root\\wmi")
         
@@ -31,37 +32,40 @@ def get_cpu_temp_wmi(tip = "Celsius"):
         if not temperatures:
             return None
         
-        temp = temperatures[0]
+        print("Temperaturile citite:")
 
-        if tip == "Celsius":
-            temp_val = (temp.CurrentTemperature / 10.0) - 273.15
-            temp_str = f"{temp_val:.2f}°C"
-            print(f"- Valoarea in Celsius: {temp_str}")
-
-        elif tip == "Fahrenheit":
-            temp_val = ((temp.CurrentTemperature / 10.0) - 273.15) * 9/5 + 32
-            temp_str = f"{temp_val:.2f}°F"
-            print(f"- Valoarea in Fahrenheit: {temp_str}")
-
-        elif tip == "Kelvin":
-            temp_val = temp.CurrentTemperature / 10.0
-            temp_str = f"{temp_val:.2f}°K"
-            print(f"- Valoarea in Kelvin: {temp_str}")
-
-        return round(float(temp_val),2)
+        for temp in temperatures:
+            if tip == "Celsius":
+                temp_celsius = (temp.CurrentTemperature / 10.0) - 273.15
+                temp_str = f"{temp_celsius:.2f}"
+                print(f"- Valoarea in Celsius: {temp_str}")
+            elif tip == "Fahrenheit":
+                temp_fahrenheit = ((temp.CurrentTemperature / 10.0) - 273.15) * 9/5 + 32
+                temp_str = f"{temp_fahrenheit:.2f}"
+                print(f"- Valoarea in Fahrenheit: {temp_str}")
+            elif tip == "Kelvin":
+                temp_kelvin = temp.CurrentTemperature / 10.0
+                temp_str = f"{temp_kelvin:.2f}"
+                print(f"- Valoarea in Kelvin: {temp_str}")
+            
+            pythoncom.CoUninitialize()
+            return temp_str
 
     except Exception as e:
         return None
 
 def get_cpu_load_wmi():
     try:
+        pythoncom.CoInitialize()
         w = wmi.WMI()
         cpu_loads = w.Win32_Processor()
         for cpu in cpu_loads:
-            print(f"- Valoarea: {cpu.LoadPercentage}%")
-            return round(float(cpu.LoadPercentage), 2)
+            cpu_str = f"{cpu.LoadPercentage}"
+            pythoncom.CoUninitialize()
+            return cpu_str
     except Exception as e:
         print(f"Eroare: {e}")
+        return "0"
 
 def get_network_load_psutil():
     try:
@@ -74,10 +78,11 @@ def get_network_load_psutil():
         
         return f"Upload: {upload:.1f} KB/s, Download: {download:.1f} KB/s"
     except Exception as e:
-        return None
+        return f"Eroare: {e}"
 
 def get_ram_usage_wmi():
     try:
+        pythoncom.CoInitialize()
         w = wmi.WMI()
         os_info = w.Win32_OperatingSystem()[0]
         
@@ -85,27 +90,26 @@ def get_ram_usage_wmi():
         free_ram = int(os_info.FreePhysicalMemory) / 1024
         used_ram = total_ram - free_ram
         ram_usage_percent = (used_ram / total_ram) * 100
+        ram_usage_str = f"{ram_usage_percent:.2f}"
 
-        return round(float(ram_usage_percent), 2)
+        pythoncom.CoUninitialize()
+        return ram_usage_str
     except Exception as e:
         return None
     
 def get_disk_usage_psutil():
     try:
         disk_usage = psutil.disk_usage('/')
-        used = disk_usage.used / (1024 ** 3)
-        total = disk_usage.total / (1024 ** 3)
         percent = disk_usage.percent
-        disk_usage_str = f"{used:.2f} GB / {total:.2f} GB ({percent:.2f}%)"
-        print(f"Disk Usage: {disk_usage_str}%")
-        return round(float(percent), 2)
+        disk_usage_str = f"{percent:.2f}"
+        return disk_usage_str
     except Exception as e:
-        return None
+        return f"Eroare: {e}"
     
 
 
 AGENT_PORT = 161
-AGENT_IP = '127.0.0.2'  #get_wifi_ip()
+AGENT_IP = '127.0.0.3'  #get_wifi_ip()
 
 ## poti sa initializezi aici variabilele globale pentru threshold-uri, daca vrei
 ## sa le avem pe toate la un loc
@@ -116,54 +120,60 @@ AGENT_IP = '127.0.0.2'  #get_wifi_ip()
 
 #### AM COMPLETAT CU THRESHOLD (completat de geo )====
 #variabile globale
-THRESHOLD_CPU_LOAD = 85  #  procente
-THRESHOLD_RAM = 80       #  procente
-THRESHOLD_DISK = 90      #  procente
-THRESHOLD_TEMP = 75      #  grade Celsius
-THRESHOLD_NET = 90       #  in procente
+THRESHOLD_CPU_LOAD = 85
+THRESHOLD_CPU_TEMP_C = 75
+THRESHOLD_CPU_TEMP_K = 348.15
+THRESHOLD_CPU_TEMP_F = 167
+THRESHOLD_RAM = 80
+THRESHOLD_DISK = 90
+THRESHOLD_NET_LOAD = 90
 
 
 # Adresa de trap a managerului
-TRAP_MANAGER_IP = '10.107.11.1' #IP MANAGER
-TRAP_MANAGER_PORT = 162
 ENTERPRISE_OID = '1.3.6.1.4.1.2.6.258'      #ce-i asta?
 
-
+threshold_lock = threading.Lock()
 
 ## aici trebuie adaugata o functie pentru setarea valorilor primite de la manager
 # COMPLETAT -GEO
-def set_thresholds_from_manager(message):
+def set_thresholds_from_manager(lista):
     global THRESHOLD_CPU_LOAD
     global THRESHOLD_RAM
     global THRESHOLD_DISK
-    global THRESHOLD_TEMP
-    global THRESHOLD_NET
+    global THRESHOLD_CPU_TEMP_C
+    global THRESHOLD_CPU_TEMP_K
+    global THRESHOLD_CPU_TEMP_F
+    global THRESHOLD_NET_LOAD
 
     try:
-        lista = message.replace("SET THRESHOLD", "").strip().split()    # care-i formatul de trimitere a setarii?
+        with threshold_lock:
+            for item in lista:
+                key = item[0]
+                value = float(item[1])
 
-        # lista de forma cheie-valoare
-        for item in lista:
-            key, value = [item[0], item[2]]
-            value = float(value)
-
-            if key == "CPU":
-                THRESHOLD_CPU_LOAD = float(value)
-            elif key == "RAM":
-                THRESHOLD_RAM = float(value)
-            elif key == "DISK":
-                THRESHOLD_DISK = float(value)
-            elif key == "TEMP":
-                THRESHOLD_TEMP = float(value)
-            elif key == "NET":
-                THRESHOLD_NET = float(value)
+                if key == "CPU_Load":
+                    THRESHOLD_CPU_LOAD = value
+                elif key == "RAM":
+                    THRESHOLD_RAM = value
+                elif key == "Disk":
+                    THRESHOLD_DISK = value
+                elif key == "Temperature_Celsius":
+                    THRESHOLD_CPU_TEMP_C = value
+                elif key == "Temperature_Kelvin":
+                    THRESHOLD_CPU_TEMP_K = value
+                elif key == "Temperature_Fahrenheit":
+                    THRESHOLD_CPU_TEMP_F = value
+                elif key == "Network_Load":
+                    THRESHOLD_NET_LOAD = value
 
         print("[THRESHOLD UPDATE] Praguri actualizate:")
         print(f" CPU={THRESHOLD_CPU_LOAD}%")
         print(f" RAM={THRESHOLD_RAM}%")
         print(f" DISK={THRESHOLD_DISK}%")
-        print(f" TEMP={THRESHOLD_TEMP}°C")
-        print(f" NET={THRESHOLD_NET}%")
+        print(f" TEMP={THRESHOLD_CPU_TEMP_C}°C")
+        print(f" TEMP={THRESHOLD_CPU_TEMP_K}°K")
+        print(f" TEMP={THRESHOLD_CPU_TEMP_F}°F")
+        # print(f" NET={THRESHOLD_NET_LOAD}%")
 
     except Exception as e:
         print(f"Eroare la setarea pragurilor: {e}")
@@ -184,7 +194,8 @@ def send_trap(specific, description, value):
     )
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.sendto(trap.encode(), (TRAP_MANAGER_IP, TRAP_MANAGER_PORT))
+    trap_manager = (manager_addr[0], 162)
+    s.sendto(trap.encode(), (trap.encode(), trap_manager))
     s.close()
 
     print(f"[TRAP SENT] {trap}")
@@ -193,33 +204,45 @@ def send_trap(specific, description, value):
 # Functie pentru monitorizarea pragurilor - Geo
 
 def monitorizare_thresholds():
+    pythoncom.CoInitialize()
+
     while True :
+        try:
+            with threshold_lock:
+                cpu_threshold = THRESHOLD_CPU_LOAD
+                ram_threshold = THRESHOLD_RAM
+                disk_threshold = THRESHOLD_DISK
+                temp_threshold_c = THRESHOLD_CPU_TEMP_C
+                temp_threshold_k = THRESHOLD_CPU_TEMP_K
+                temp_threshold_f = THRESHOLD_CPU_TEMP_F
 
-        pythoncom.CoInitialize() 
+            #CPU LOAD
+            cpu_val = round(float(get_cpu_load_wmi()),2)
+            if cpu_val > cpu_threshold:
+                send_trap(2, "CPU load depaseste pragul", f"{cpu_val}%")
 
-        #CPU LOAD
-        cpu_val = get_cpu_load_wmi()
-        if cpu_val > THRESHOLD_CPU_LOAD:
-            send_trap(2, "CPU load depaseste pragul", f"{cpu_val}%"
-            )
-
-        #RAM 
-        ram = get_ram_usage_wmi()
-        if ram > THRESHOLD_RAM:
-            send_trap(3, "RAM peste prag", f"{ram :.2f}%")
+            #RAM 
+            ram = round(float(get_ram_usage_wmi()),2)
+            if ram > ram_threshold:
+                send_trap(3, "RAM peste prag", f"{ram :.2f}%")
 
 
-        # DISK
-        disk = get_disk_usage_psutil()
-        if disk > THRESHOLD_DISK:
-            send_trap(4, "Disk aproape plin", f"{disk:.2f}%")
+            # DISK
+            disk = round(float(get_disk_usage_psutil()), 2)
+            if disk > disk_threshold:
+                send_trap(4, "Disk aproape plin", f"{disk:.2f}%")
 
-        # TEMP
-        temp_c = get_cpu_temp_wmi("Celsius")
-        if temp_c > THRESHOLD_TEMP:
-            send_trap(1, "Temperatura CPU ridicata", temp_c)
+            # TEMP
+            temp_c = round(float(get_cpu_temp_wmi("Celsius")), 2)
+            temp_k = round(float(get_cpu_temp_wmi("Kelvin")), 2)
+            temp_f = round(float(get_cpu_temp_wmi("Fahrenheit")), 2)
+            if temp_c > temp_threshold_c or temp_k > temp_threshold_k or temp_f > temp_threshold_f:
+                send_trap(1, "Temperatura CPU ridicata", temp_c)
 
-        time.sleep(5)
+            time.sleep(5)
+        except Exception as e:
+            time.sleep(5)
+
 ##################
 
 
@@ -233,23 +256,26 @@ agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 #legarea socket-ului la adresa agentului
 try:
     agent_socket.bind((AGENT_IP, 161))
-    #adaugat - geo
-    threading.Thread(target=monitorizare_thresholds, daemon=True).start()
-
-
 except OSError as e:
     sys.exit(1)
 
-
 print(f"Agentul asculta pe UDP 10.107.11.0:{AGENT_PORT}...")
+
+monitoring_started = False
 
 try:
     # Bucla principala de asteptare
     while True:
         data, manager_addr = agent_socket.recvfrom(1024)
+
+        if not monitoring_started:
+            threading.Thread(target=monitorizare_thresholds, args = (manager_addr,), daemon=True).start()
+            monitoring_started = True
         
         request_msg = data.decode()
         print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
+
+        response_data = None
 
         match request_msg:
             case "Temperature Celsius":
@@ -281,7 +307,8 @@ try:
                 response_data = f"Response: Disk Usage = {disk_usage}".encode('utf-8')
 
             case _ if request_msg.startswith("SET THRESHOLD"):
-                set_thresholds_from_manager(request_msg)
+                parts = request_msg.replace("SET THRESHOLD", "").strip().split("=")
+                set_thresholds_from_manager([parts[0], parts[1]])
                 response_data = b"Threshold-uri actualizate cu succes"
 
             case "close":
@@ -297,4 +324,5 @@ try:
 except KeyboardInterrupt:
     print("\nAgent oprit de utilizator.")
     agent_socket.close()
+    pythoncom.CoUninitialize()
     print("Agentul s-a inchis.")

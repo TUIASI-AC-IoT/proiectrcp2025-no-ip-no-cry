@@ -2,11 +2,12 @@
 import socket
 import select
 import sys
+import threading
 from tkinter import *
 
 # configurarea adreselor/porturilot agentilor
-AGENT_1_ADDR = ('127.0.0.1', 161)         #laptop felicia,   ip : 10.107.11.160
-AGENT_2_ADDR = ('127.0.0.2', 161)         #laptop georgiana, ip : 10.107.11.199
+AGENT_1_ADDR = ('127.0.0.3', 161)         #laptop felicia,   ip : 10.107.11.160
+AGENT_2_ADDR = ('127.0.0.4', 161)         #laptop georgiana, ip : 10.107.11.199
 
 ## GEO
 TRAP_PORT = 162
@@ -35,6 +36,11 @@ mib = {
     "f.f.f" : "close"
 }
 
+mib_order = [
+    "1.1.1", "1.1.2", "1.1.2.1", "1.1.2.2", "1.1.2.3",
+    "1.2.1", "1.2.2", "1.3.1", "f.f.f"
+]
+
 # interfata grafica
 
 root = Tk()
@@ -49,7 +55,7 @@ frame_info.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
 frame_response.grid(row=1, column=1, padx=20, pady=10, sticky="nsew", columnspan=3)
 
 setR = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
-setR.insert(0, "Introduceti tipul setarii: (Ex: SET THRESHOLD 1.1.1=70)")
+setR.insert(0, "Introduceti tipul setarii: (Ex: SET THRESHOLD 1.1.1 = 70)")
 setR.grid(row=0, column=4)
 
 e = Entry(frame_up, width=50, borderwidth=5, font=("Times New Roman", 12))
@@ -83,15 +89,13 @@ disk.grid(column=0, row=9, sticky="w")
 net.grid(column=0, row=10, sticky="w")
 net_load.grid(column=0, row=11, sticky="w")
 
-myLabl = Label(frame_response, text="Managerul asculta pe portul local 161(UDP)... ", font=("Times New Roman", 12), anchor = "w")
+myLabl = Label(frame_response, text="Managerul asculta pe portul local 161(raspunsuri) si 162(trap-uri)... ", font=("Times New Roman", 12), anchor = "w")
 myLabl.grid(column=0, row=0, sticky="w")
 
 
 
 # handling responses
 response_row = 1
-responses_received = 0
-expected_responses = 2
 MAX_RESPONSES = 20 
 response_labels = []
 
@@ -114,85 +118,92 @@ def add_response_label(text):
         
         response_row = len(response_labels) + 1
 
-def check_for_responses():
-    global response_row, responses_received
-    
-    try:
-        ready_to_read, _, _ = select.select([manager_socket, trap_socket], [], [], 0.5)
+def check_for_responses():    
+    while True:
+        try:
+            ready_to_read, _, _ = select.select([manager_socket, trap_socket], [], [], 0.1)
 
-        if manager_socket in ready_to_read:
-            data, addr = manager_socket.recvfrom(1024)
-            response_msg = data.decode()
-            
-            add_response_label(f"Raspuns primit de la {addr}: {response_msg}")
-            responses_received += 1
-            
-            if responses_received < expected_responses:
-                root.after(100, check_for_responses)
-            else:
-                responses_received = 0
+            if manager_socket in ready_to_read:
+                data, addr = manager_socket.recvfrom(1024)
+                response_msg = data.decode()
+                
+                root.after(0, add_response_label, f"[RESPONSE] {addr[0]}:{addr[1]} : {response_msg}")
 
-        # ---- TRAP-URI receptionate -----(Geo)
-        if trap_socket in ready_to_read:
-            trap_data, trap_addr = trap_socket.recvfrom(1024)
-            trap_msg = trap_data.decode()
-            add_response_label(f"Trap primit de la {trap_addr}: {trap_msg}")
-            responses_received += 1
-            
-    except Exception as e:
-        print(f"Eroare la primirea raspunsului: {e}")
-        root.after(100, check_for_responses)
+            # ---- TRAP-URI receptionate -----(Geo)
+            if trap_socket in ready_to_read:
+                data, addr = trap_socket.recvfrom(1024)
+                trap_msg = data.decode()
+                root.after(0, add_response_label, f"[TRAP] {addr[0]}:{addr[1]} : {trap_msg}")
+                
+        except Exception as e:
+            print(f"Eroare la primirea raspunsului: {e}")
+
+response_thread = threading.Thread(target=check_for_responses, daemon=True)
+response_thread.start()
 
 
 def sendRequest():
-    global response_row, responses_received
+    global e
     
-    responses_received = 0
+    oid = e.get()
     
-    add_response_label(f"Se trimite cererea: {mib[e.get()]}...")
+    add_response_label(f"Se trimite cererea: {mib[oid]}...")
     
-    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
-    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
+    manager_socket.sendto(mib[oid].encode('utf-8'), AGENT_1_ADDR)
+    manager_socket.sendto(mib[oid].encode('utf-8'), AGENT_2_ADDR)
     
     add_response_label("Se asteapta raspunsurile... ")
     
-    root.after(200, check_for_responses)
 
 
 # din ce am inteles, asta trimite urmatoarea cerere din MIB
 # adica, daca noi am cerut CPU Load, daca apasam pe SendNextRequest va fi CPU Temperature,
 # adica urmatorul din dictionar
 def SendNextRequest():
-    global response_row, responses_received
+    global e
     
-    responses_received = 0
+    current_oid = e.get()
+
+    current_index = mib_order.index(current_oid)
+    if current_index + 1 >= len(mib_order):
+        add_response_label("[INFO] Ajuns la sfârșitul MIB-ului")
+        return
+
+    next_oid = mib_order[current_index + 1]
+    next_msg = mib[next_oid]
+
+    e.delete(0, END)
+    e.insert(0, next_oid)
     
-    add_response_label(f"Se trimite urmatoarea cerere: {mib[e.get()]}...")
+    add_response_label(f"Se trimite urmatoarea cerere: {next_msg}...")
     
-    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_1_ADDR)
-    manager_socket.sendto(mib[e.get()].encode('utf-8'), AGENT_2_ADDR)
+    manager_socket.sendto(next_msg.encode('utf-8'), AGENT_1_ADDR)
+    manager_socket.sendto(next_msg.encode('utf-8'), AGENT_2_ADDR)
     
     add_response_label("Se asteapta raspunsurile... ")
-    
-    root.after(100, check_for_responses)
+
 
 # am introdus eu entry-ul pentru a seta threshold-urile 
 # modifica functia asta, ca sa trimita si mib-ul si valoarea pe care vrem s-o setam
 def setRequest():
-    global response_row, responses_received
+    global setR
     
-    responses_received = 0
-    set_oid = setR.get().replace("SET THRESHOLD", "").strip().split()
-    set_msg = setR.get().replace(set_oid, mib[set_oid[0]])
-    add_response_label(f"Se trimite setarea: {mib[set_oid[0]]}...")
+    set_command = setR.get().strip()
+
+    parts = set_command.replace("SET THRESHOLD", "").strip().split("=")
+
+    set_oid = parts[0].strip()
+    set_value = parts[1].strip()
+
+    set_name = mib[set_oid]
+    set_msg = f"SET THRESHOLD {set_name} = {set_value}"
+
+    add_response_label(f"Se trimite setarea: {set_msg}...")
     
     manager_socket.sendto(set_msg.encode('utf-8'), AGENT_1_ADDR)
     manager_socket.sendto(set_msg.encode('utf-8'), AGENT_2_ADDR)
     
-    add_response_label("Se asteapta raspunsurile... ")
-    sys.sleep(10)
-    
-    root.after(100, check_for_responses)
+    add_response_label("Se asteapta confirmarea... ")
 
 # buttons
 send_button = Button(frame_up, text="Get Request", font=("Times New Roman", 14), width=20, command=sendRequest)
@@ -203,6 +214,9 @@ next_button.grid(row=0, column=2)
 set_button.grid(row=0, column=3)
 
 root.mainloop()
+
+manager_socket.close()
+trap_socket.close()
 
 ## trebuie sa imi dau seama de ce nu primesc raspunsurile imediat cum le trimit,
 ## merge doar daca apas butonul de Send Request din nou
