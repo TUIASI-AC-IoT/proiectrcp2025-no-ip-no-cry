@@ -241,7 +241,7 @@ def SendNextRequest():
             current_oid = "1.1.2.3"
 
     current_index = mib_order.index(current_oid)
-    if current_index + 1 >= len(mib_order):
+    if current_index + 1 == len(mib_order):
         add_response_label("[INFO] Ajuns la sfârșitul MIB-ului")
         next_oid = mib_order[0]
 
