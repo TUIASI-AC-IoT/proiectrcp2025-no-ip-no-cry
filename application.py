@@ -221,11 +221,7 @@ def sendRequest():
     
     add_response_label("Se asteapta raspunsurile... ")
     
-
-
-# din ce am inteles, asta trimite urmatoarea cerere din MIB
-# adica, daca noi am cerut CPU Load, daca apasam pe SendNextRequest va fi CPU Temperature,
-# adica urmatorul din dictionar
+    
 def SendNextRequest():
     global e
     
