@@ -7,8 +7,6 @@ from tkinter import *
 # configurarea adreselor/porturilot agentilor
 AGENT_1_ADDR = ('10.107.11.160', 161)         #laptop felicia,   ip : 10.107.11.160
 AGENT_2_ADDR = ('10.107.11.199', 161)         #laptop georgiana, ip : 10.107.11.199
-
-## GEO
 TRAP_PORT = 162
 
 #crearea socket-ului UDP pentru manager
@@ -16,7 +14,7 @@ manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 manager_socket.bind(('0.0.0.0', 0)) 
 manager_socket.setblocking(False) 
 
-## GEO
+
 ## socket pentru Traps
 trap_socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 trap_socket.bind(('0.0.0.0', TRAP_PORT))

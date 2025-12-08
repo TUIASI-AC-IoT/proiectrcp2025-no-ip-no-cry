@@ -143,14 +143,7 @@ def get_disk_usage_psutil():
 AGENT_PORT = 161
 AGENT_IP = get_wifi_ip()
 
-## poti sa initializezi aici variabilele globale pentru threshold-uri, daca vrei
-## sa le avem pe toate la un loc
-## sa fie de genu threshold_cpu_load = 80  # procentaj
-## sau threshold_temp = 75  # grade Celsius si tot asa
 
-
-
-#### AM COMPLETAT CU THRESHOLD (completat de geo )====
 #variabile globale
 THRESHOLD_CPU_LOAD = 85
 THRESHOLD_CPU_TEMP_C = 75
@@ -168,7 +161,6 @@ ENTERPRISE_OID = '1.3.6.1.4.1.2.6.258'
 threshold_lock = threading.Lock()
 
 ## aici trebuie adaugata o functie pentru setarea valorilor primite de la manager
-# COMPLETAT -GEO
 def set_thresholds_from_manager(lista):
     global THRESHOLD_CPU_LOAD
     global THRESHOLD_RAM
@@ -219,7 +211,7 @@ def set_thresholds_from_manager(lista):
         print(f"Eroare la setarea pragurilor: {e}")
 
 
- ## Functie pentru trimiterea trap-urilor - Geo
+ ## Functie pentru trimiterea trap-urilor
 def send_trap(specific, description, value, manager_addr):
     trap = (
         f"SNMPv1-TRAP | "
@@ -239,8 +231,7 @@ def send_trap(specific, description, value, manager_addr):
     print(f"[TRAP SENT] {trap}")
 
 
-# Functie pentru monitorizarea pragurilor - Geo
-
+# Functie pentru monitorizarea pragurilor
 def monitorizare_thresholds(manager_addr):
     while True :
         try:
@@ -279,9 +270,6 @@ def monitorizare_thresholds(manager_addr):
             time.sleep(10)
         except Exception as e:
             time.sleep(10)
-
-##################
-
 
 
 
