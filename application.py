@@ -231,22 +231,22 @@ def SendNextRequest():
     
     current_oid = e.get()
 
-    if current_oid == "1.1.2":
-        unitate = combo_box.get()
-        if unitate == "Celsius":
-            current_oid = "1.1.2.1"
-        elif unitate == "Fahrenheit":
-            current_oid = "1.1.2.2"
-        elif unitate == "Kelvin":
-            current_oid = "1.1.2.3"
-
     current_index = mib_order.index(current_oid)
     if current_index  == len(mib_order)-2:
         add_response_label("[INFO] Ajuns la sfârșitul MIB-ului")
         current_index = -1
 
-
     next_oid = mib_order[current_index + 1]
+
+    if next_oid == "1.1.2":
+        unitate = combo_box.get()
+        if unitate == "Celsius":
+            next_oid = "1.1.2.1"
+        elif unitate == "Fahrenheit":
+            next_oid = "1.1.2.2"
+        elif unitate == "Kelvin":
+            next_oid = "1.1.2.3"
+
     next_msg = mib[next_oid]
 
     e.delete(0, END)
