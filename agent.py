@@ -36,46 +36,38 @@ def get_cpu_temp_wmi(tip = "Celsius"):
         
         print("Temperaturile citite:")
 
-        for temp in temperatures:
-            # conversia temperaturii in unitatea de masura dorita
-            if tip == "Celsius":
-                temp_celsius = (temp.CurrentTemperature / 10.0) - 273.15
-                temp_str = f"{temp_celsius:.2f}"
-                print(f"- Valoarea in Celsius: {temp_str}")
-            elif tip == "Fahrenheit":
-                temp_fahrenheit = ((temp.CurrentTemperature / 10.0) - 273.15) * 9/5 + 32
-                temp_str = f"{temp_fahrenheit:.2f}"
-                print(f"- Valoarea in Fahrenheit: {temp_str}")
-            elif tip == "Kelvin":
-                temp_kelvin = temp.CurrentTemperature / 10.0
-                temp_str = f"{temp_kelvin:.2f}"
-                print(f"- Valoarea in Kelvin: {temp_str}")
+        temp = temperatures[0]
+        # conversia temperaturii in unitatea de masura dorita
+        if tip == "Celsius":
+            temp_celsius = (temp.CurrentTemperature / 10.0) - 273.15
+            temp_str = f"{temp_celsius:.2f}"
+            print(f"- Valoarea in Celsius: {temp_str}")
+        elif tip == "Fahrenheit":
+            temp_fahrenheit = ((temp.CurrentTemperature / 10.0) - 273.15) * 9/5 + 32
+            temp_str = f"{temp_fahrenheit:.2f}"
+            print(f"- Valoarea in Fahrenheit: {temp_str}")
+        elif tip == "Kelvin":
+            temp_kelvin = temp.CurrentTemperature / 10.0
+            temp_str = f"{temp_kelvin:.2f}"
+            print(f"- Valoarea in Kelvin: {temp_str}")
             
-            # eliberarea COM
-            pythoncom.CoUninitialize()
-            return temp_str
+        return temp_str
 
     except Exception as e:
         return None
 
+    finally:
+        #eliberarea COM
+        pythoncom.CoUninitialize()
+
 #functie pentru obtinerea CPU Load folosind WMI
-def get_cpu_load_wmi():
+def get_cpu_load_psutil():
     try:
-        pythoncom.CoInitialize()
-        w = wmi.WMI()
-
-        # funcia de obtinere a CPU Load
-        cpu_loads = w.Win32_Processor()
-        for cpu in cpu_loads:
-            # convertirea la formatul dorit
-            cpu_str = f"{cpu.LoadPercentage}"
-
-            #eliberarea COM
-            pythoncom.CoUninitialize()
-            return cpu_str
-        
+        # psutil.cpu_percent() returneaza procentajul de utilizare CPU
+        cpu_load = psutil.cpu_percent(interval=1) # Măsurare pe 1 secundă
+        return f"{cpu_load:.2f}"
     except Exception as e:
-        print(f"Eroare: {e}")
+        print(f"Eroare psutil CPU Load: {e}")
         return "0"
 
 # functie pentru obtinerea Network Load folosind psutil
@@ -125,10 +117,14 @@ def get_ram_usage_wmi():
         ram_usage_percent = (used_ram / total_ram) * 100
         ram_usage_str = f"{ram_usage_percent:.2f}"
 
-        pythoncom.CoUninitialize()
         return ram_usage_str
+    
     except Exception as e:
         return None
+    
+    finally:
+        #eliberarea COM
+        pythoncom.CoUninitialize()
     
 # functie pentru obtinerea utilizarii Disk folosind psutil
 def get_disk_usage_psutil():
@@ -145,7 +141,7 @@ def get_disk_usage_psutil():
 
 # definirea adreselor si porturilor agentilor
 AGENT_PORT = 161
-AGENT_IP = '127.0.0.4'  #get_wifi_ip()
+AGENT_IP = get_wifi_ip()
 
 ## poti sa initializezi aici variabilele globale pentru threshold-uri, daca vrei
 ## sa le avem pe toate la un loc
@@ -308,7 +304,7 @@ monitoring_started = False
 try:
     # Bucla principala de asteptare
     while True:
-        data, manager_addr = agent_socket.recvfrom(1024)
+        data, manager_addr = agent_socket.recvfrom(4096)
 
         if not monitoring_started:
             threading.Thread(target=monitorizare_thresholds, args = (manager_addr,), daemon=True).start()
