@@ -183,7 +183,7 @@ def set_thresholds_from_manager(lista):
                     THRESHOLD_RAM = value
                 elif key == "Disk":
                     THRESHOLD_DISK = value
-                elif key == "Temperature_Celsius":
+                elif key == "Temperature_Celsius" or key == "CPU_Temperature":
                     THRESHOLD_CPU_TEMP_C = value
                     THRESHOLD_CPU_TEMP_K = value + 273.15
                     THRESHOLD_CPU_TEMP_F = (value * 9/5) + 32
