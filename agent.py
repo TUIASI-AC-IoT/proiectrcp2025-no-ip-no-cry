@@ -252,7 +252,7 @@ def monitorizare_thresholds(manager_addr):
                 net_threshold = THRESHOLD_NET_LOAD
 
             #CPU LOAD
-            cpu_val = round(float(get_cpu_load_wmi()),2)
+            cpu_val = round(float(get_cpu_load_psutil()),2)
             if cpu_val > cpu_threshold:
                 send_trap(2, "CPU load depaseste pragul", cpu_val, manager_addr)
 
@@ -276,9 +276,9 @@ def monitorizare_thresholds(manager_addr):
             if net > net_threshold:
                 send_trap(5, "Reteaua este congestionata", net, manager_addr)
 
-            time.sleep(5)
+            time.sleep(10)
         except Exception as e:
-            time.sleep(5)
+            time.sleep(10)
 
 ##################
 
@@ -316,7 +316,7 @@ try:
         response_data = None
 
         match request_msg:
-            case "Temperature":
+            case "CPU_Temperature":
                 temp = get_cpu_temp_wmi("Celsius")
                 response_data = f"Response: CPU Temperature(default - Celsius) = {temp}".encode('utf-8')
 
@@ -333,7 +333,7 @@ try:
                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
             case "CPU_Load":
-                cpu_load = get_cpu_load_wmi()
+                cpu_load = get_cpu_load_psutil()
                 response_data = f"Response: CPU Load = {cpu_load}".encode('utf-8')
 
             case "Network_Load":

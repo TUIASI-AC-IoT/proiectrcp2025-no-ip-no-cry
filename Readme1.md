@@ -3,6 +3,8 @@
 ## Proiect la disciplina Rețele de Calculatoare 
 ## Studenți : Aciocîrlănoaei Georgiana  & Dascălu  Ioana-Felicia - 1310 A 
 
+
+## Considerații generale
 _Simple Network Management Protocol_ (SNMP, ro. : “Protocolul Simplu de Administrare a Rețelei “) este un protocol de administrare standardizat  Internet , conceput initial pentru gestionarea rețelelor TCP/IP .
   
   SNMP este un protocol implementat la nivel de aplicație ce folosește porturile _UDP 161(SNMP Manager- trimite request-uri către agent pe portul 161 – Get, GetNext, Set) și 162(SNMP Manager – pentru a primi traps sau inform messages de la agenți; agentul SNMP trimite Trap/Inform către manager pe portul 162)_ . Acesta este utilizat în cadrul monitorizării rețelelor , administrării echipamentelor de rețea ( routere, switch-uri, servere, imprimante etc.),  detectarea defecțiunilor de rețea , colectării informațiilor și configurarea dispozitivelor de la distanță.
@@ -251,7 +253,7 @@ Prin această ierarhie, este asigurată:
 	
    _Scopul proiectului_ este de a evidenția modul în care poate fi realizată monitorizarea și administrarea resurselor unui sistem de calcul utilizând mecanismele standardizate ale protocolului SNMP, implementate de la zero prin intermediul modulului socket, fără a apela la biblioteci externe dedicate SNMP.
 
-   _Programarea cu sockets_ este esențială pentru comunicațiile de rețea, permițând schimbul de date între diferite dispositive, fiind o metodă de a conecta două noduri într-o rețea pentru a comunica între ele .
+   _Programarea cu sockets_ este esențială pentru comunicațiile de rețea, permițând schimbul de date între diferite dispozitive, fiind o metodă de a conecta două noduri într-o rețea pentru a comunica între ele .
 
 
 
@@ -276,19 +278,19 @@ Programarea cu socket-uri începe prin importarea bibliotecii socket și crearea
 
 Alte module importante pe care le vom folosi pe parcursul acestui proiect sunt:
 
-- **pyasn1** - biblioteca pentru encodarea și decodarea ASN.1 (Abstract Syntax Notation One), standardul folosit de SNMP pentru reprezentarea structurilor de date. Oferă encoder și decoder BER (Basic Encoding Rules) pentru serializarea mesajelor SNMP in format binar;
-
 - **sys** - acces la parametri și funcții specifice interpreterului Python, inclusiv argumentele din linia de comandă și exit codes;
 
-- **binascii** - facilități pentru conversii intre date binare și reprezentări hexazecimale, util pentru debugging și afișarea pachetelor SNMP intr-un format usor de citit;
+- **time** - folosit pentru timestampuri, timeout-uri in comunicația UDP și măsurarea timpului de up-time al sistemului (sysUpTime din MIB);
 
-- **time** - folosit pentru timestampuri, timeout-uri in comunicația UDP și măsurarea timpului de up-time al sistemului (sysUpTime din MIB).
+-**psutil** și **wmi** - folosite pentru extragerea de informații despre hardware-ul laptop-ului;
 
--**psutil** și **wmi** - folosite pentru extragerea de informații despre hardware-ul laptop-ului.
+-**select** - folosit pentru asigurarea transferului de date de la manager spre agent și vice-versa;
 
--**select** - folosit pentru asigurarea transferului de date de la manager spre agent și vice-versa.
+-**tkinter** - folosit pentru interfața grafică;
 
--**tkinter** - folosit pentru interfața grafică.
+-**threading** - folosit pentru a rula mai multe fluxuri de execuție în paralel în cadrul aceluiași proces (permite agentului să monitorizeze resursele și să comunice cu managerul fără a bloca aplicația);
+
+-**pythoncom** - asigură inițializarea modelului COM în thread-urile secundare, astfel încât interogările WMI să poată fi executate în paralel fără blocaje sau erori.
 
 
 
@@ -365,7 +367,7 @@ Cererea include OID-ul obiectului și versiunea protocolului ;
    
 3.	Disk usage > 90% (spațiu insuficient pe disc);
 	
-4.	Temperature > limita admisă : 65 grade Celsius (apare riscul de supraîncălzire a sistemului );
+4.	Temperature > limita admisă : 75 grade Celsius (apare riscul de supraîncălzire a sistemului );
 	
 5.	Network  Load > 90% (rețeaua este congestionată).
    
@@ -452,7 +454,7 @@ _4.	Disk Usage (Spațiul utilizat pe disc)_
 	
 _5.	Network Load (Traficul/Încărcarea rețelei)_
  	
--	Sunt 2 valori exprimate în KB/s care reprezintă viteza de descărcare, respectiv încărcare a datelor în rețea;
+-	Este o valoare exprimată în procente ce reprezintă gradul de ocupare al traficului de rețea;
 
 
 
