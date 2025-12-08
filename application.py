@@ -269,6 +269,16 @@ def setRequest():
     parts = set_command.replace("SET THRESHOLD", "").strip().split("=")
 
     set_oid = parts[0].strip()
+
+    if set_oid == "1.1.2":
+        unitate = combo_box.get()
+        if unitate == "Celsius":
+            set_oid = "1.1.2.1"
+        elif unitate == "Fahrenheit":
+            set_oid = "1.1.2.2"
+        elif unitate == "Kelvin":
+            set_oid = "1.1.2.3"
+
     set_value = parts[1].strip()
 
     set_name = mib[set_oid]
