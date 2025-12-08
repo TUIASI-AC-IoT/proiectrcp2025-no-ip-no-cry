@@ -5,7 +5,6 @@ import wmi
 import psutil
 import time
 import threading
-import os
 import pythoncom
 
 def get_wifi_ip():
@@ -109,7 +108,7 @@ def get_disk_usage_psutil():
 
 
 AGENT_PORT = 161
-AGENT_IP = '127.0.0.3'  #get_wifi_ip()
+AGENT_IP = '127.0.0.4'  #get_wifi_ip()
 
 ## poti sa initializezi aici variabilele globale pentru threshold-uri, daca vrei
 ## sa le avem pe toate la un loc
@@ -182,7 +181,7 @@ def set_thresholds_from_manager(lista):
 
 
  ## Functie pentru trimiterea trap-urilor - Geo
-def send_trap(specific, description, value):
+def send_trap(specific, description, value, manager_addr):
     trap = (
         f"SNMPv1-TRAP | "
         f"Enterprise={ENTERPRISE_OID} | "
@@ -195,7 +194,7 @@ def send_trap(specific, description, value):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     trap_manager = (manager_addr[0], 162)
-    s.sendto(trap.encode(), (trap.encode(), trap_manager))
+    s.sendto(trap.encode(), trap_manager)
     s.close()
 
     print(f"[TRAP SENT] {trap}")
@@ -203,7 +202,7 @@ def send_trap(specific, description, value):
 
 # Functie pentru monitorizarea pragurilor - Geo
 
-def monitorizare_thresholds():
+def monitorizare_thresholds(manager_addr):
     pythoncom.CoInitialize()
 
     while True :
@@ -219,25 +218,25 @@ def monitorizare_thresholds():
             #CPU LOAD
             cpu_val = round(float(get_cpu_load_wmi()),2)
             if cpu_val > cpu_threshold:
-                send_trap(2, "CPU load depaseste pragul", f"{cpu_val}%")
+                send_trap(2, "CPU load depaseste pragul", f"{cpu_val}%", manager_addr)
 
             #RAM 
             ram = round(float(get_ram_usage_wmi()),2)
             if ram > ram_threshold:
-                send_trap(3, "RAM peste prag", f"{ram :.2f}%")
+                send_trap(3, "RAM peste prag", f"{ram :.2f}%", manager_addr)
 
 
             # DISK
             disk = round(float(get_disk_usage_psutil()), 2)
             if disk > disk_threshold:
-                send_trap(4, "Disk aproape plin", f"{disk:.2f}%")
+                send_trap(4, "Disk aproape plin", f"{disk:.2f}%", manager_addr)
 
             # TEMP
             temp_c = round(float(get_cpu_temp_wmi("Celsius")), 2)
             temp_k = round(float(get_cpu_temp_wmi("Kelvin")), 2)
             temp_f = round(float(get_cpu_temp_wmi("Fahrenheit")), 2)
             if temp_c > temp_threshold_c or temp_k > temp_threshold_k or temp_f > temp_threshold_f:
-                send_trap(1, "Temperatura CPU ridicata", temp_c)
+                send_trap(1, "Temperatura CPU ridicata", temp_c, manager_addr)
 
             time.sleep(5)
         except Exception as e:
@@ -278,23 +277,23 @@ try:
         response_data = None
 
         match request_msg:
-            case "Temperature Celsius":
+            case "Temperature_Celsius":
                 temp = get_cpu_temp_wmi("Celsius")
                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "Temperature Fahrenheit":
+            case "Temperature_Fahrenheit":
                 temp = get_cpu_temp_wmi("Fahrenheit")
                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "Temperature Kelvin":
+            case "Temperature_Kelvin":
                 temp = get_cpu_temp_wmi("Kelvin")
                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "CPU Load":
+            case "CPU_Load":
                 cpu_load = get_cpu_load_wmi()
                 response_data = f"Response: CPU Load = {cpu_load}".encode('utf-8')
 
-            case "Network Load":
+            case "Network_Load":
                 net_load = get_network_load_psutil()
                 response_data = f"Response: Network Load:  {net_load}".encode('utf-8')
 
@@ -308,7 +307,9 @@ try:
 
             case _ if request_msg.startswith("SET THRESHOLD"):
                 parts = request_msg.replace("SET THRESHOLD", "").strip().split("=")
-                set_thresholds_from_manager([parts[0], parts[1]])
+                key = parts[0].strip()
+                value = parts[1].strip()
+                set_thresholds_from_manager([(key, value)])
                 response_data = b"Threshold-uri actualizate cu succes"
 
             case "close":

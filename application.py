@@ -25,14 +25,14 @@ trap_socket.setblocking(False)
 
 # configurarea MIB-ului
 mib = {
-    "1.1.1" : "CPU Load",
-    "1.1.2" : "CPU Temperature",
-    "1.1.2.1" : "Temperature Celsius",
-    "1.1.2.2" : "Temperature Fahrenheit",
-    "1.1.2.3" : "Temperature Kelvin",
+    "1.1.1" : "CPU_Load",
+    "1.1.2" : "CPU_Temperature",
+    "1.1.2.1" : "Temperature_Celsius",
+    "1.1.2.2" : "Temperature_Fahrenheit",
+    "1.1.2.3" : "Temperature_Kelvin",
     "1.2.1" : "RAM",
     "1.2.2" : "Disk",
-    "1.3.1" : "Network Load", 
+    "1.3.1" : "Network_Load", 
     "f.f.f" : "close"
 }
 
