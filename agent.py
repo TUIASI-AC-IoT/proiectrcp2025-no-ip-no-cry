@@ -177,25 +177,25 @@ def set_thresholds_from_manager(lista):
                 key = item[0]
                 value = float(item[1])
 
-                if key == "CPU_Load":
+                if key == "CPU_LOAD":
                     THRESHOLD_CPU_LOAD = value
                 elif key == "RAM":
                     THRESHOLD_RAM = value
-                elif key == "Disk":
+                elif key == "DISK":
                     THRESHOLD_DISK = value
-                elif key == "Temperature_Celsius" or key == "CPU_Temperature":
+                elif key == "TEMPERATURE_C" or key == "CPU_TEMPERATURE":
                     THRESHOLD_CPU_TEMP_C = value
                     THRESHOLD_CPU_TEMP_K = value + 273.15
                     THRESHOLD_CPU_TEMP_F = (value * 9/5) + 32
-                elif key == "Temperature_Kelvin":
+                elif key == "TEMPERATURE_K":
                     THRESHOLD_CPU_TEMP_K = value
                     THRESHOLD_CPU_TEMP_C = value - 273.15
                     THRESHOLD_CPU_TEMP_F = ((value - 273.15) * 9/5) + 32
-                elif key == "Temperature_Fahrenheit":
+                elif key == "TEMPERATURE_F":
                     THRESHOLD_CPU_TEMP_F = value
                     THRESHOLD_CPU_TEMP_C = (value - 32) * 5/9
                     THRESHOLD_CPU_TEMP_K = ((value - 32) * 5/9) + 273.15
-                elif key == "Network_Load":
+                elif key == "NETWORK_LOAD":
                     THRESHOLD_NET_LOAD = value
 
         print("[THRESHOLD UPDATE] Praguri actualizate:")
@@ -300,11 +300,6 @@ try:
         
         request_msg = data.decode().strip()
         print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
-
-        if request_msg == "CPU_LOAD":
-            print("[DEBUG] Match găsit pentru CPU_LOAD!")
-        else:
-            print(f"[DEBUG] Nu se potrivește! Comparație: '{request_msg}' vs 'CPU_LOAD'")
 
         match request_msg:
             case "DISCOVERY":
