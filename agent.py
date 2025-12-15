@@ -17,7 +17,7 @@ def get_wifi_ip():
         ip = '0.0.0.0'
     finally:
         s.close()
-        return ip
+    return ip
 
 # functia pentru obtinerea temperaturii CPU folosind WMI
 def get_cpu_temp_wmi(tip = "Celsius"):
@@ -280,7 +280,7 @@ agent_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 #legarea socket-ului la adresa agentului
 try:
-    agent_socket.bind((AGENT_IP, 161))
+    agent_socket.bind((AGENT_IP, AGENT_PORT))
 except OSError as e:
     sys.exit(1)
 
@@ -292,39 +292,45 @@ monitoring_started = False
 try:
     # Bucla principala de asteptare
     while True:
-        data, manager_addr = agent_socket.recvfrom(4096)
+        data, manager_addr = agent_socket.recvfrom(1024)
 
         if not monitoring_started:
             threading.Thread(target=monitorizare_thresholds, args = (manager_addr,), daemon=True).start()
             monitoring_started = True
         
-        request_msg = data.decode()
+        request_msg = data.decode().strip()
         print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
 
-        response_data = None
+        if request_msg == "CPU_LOAD":
+            print("[DEBUG] Match găsit pentru CPU_LOAD!")
+        else:
+            print(f"[DEBUG] Nu se potrivește! Comparație: '{request_msg}' vs 'CPU_LOAD'")
 
         match request_msg:
-            case "CPU_Temperature":
+            case "DISCOVERY":
+                response_data = "Response: AGENT READY".encode('utf-8')
+
+            case "CPU_TEMPERATURE":
                 temp = get_cpu_temp_wmi("Celsius")
                 response_data = f"Response: CPU Temperature(default - Celsius) = {temp}".encode('utf-8')
 
-            case "Temperature_Celsius":
+            case "TEMPERATURE_C":
                 temp = get_cpu_temp_wmi("Celsius")
                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "Temperature_Fahrenheit":
+            case "TEMPERATURE_F":
                 temp = get_cpu_temp_wmi("Fahrenheit")
                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "Temperature_Kelvin":
+            case "TEMPERATURE_K":
                 temp = get_cpu_temp_wmi("Kelvin")
                 response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "CPU_Load":
+            case "CPU_LOAD":
                 cpu_load = get_cpu_load_psutil()
                 response_data = f"Response: CPU Load = {cpu_load}".encode('utf-8')
 
-            case "Network_Load":
+            case "NETWORK_LOAD":
                 net_load = get_network_load_psutil()
                 response_data = f"Response: Network Load:  {net_load}".encode('utf-8')
 
@@ -332,7 +338,7 @@ try:
                 ram_usage = get_ram_usage_wmi()
                 response_data = f"Response: RAM Usage = {ram_usage}".encode('utf-8')
 
-            case "Disk":
+            case "DISK":
                 disk_usage = get_disk_usage_psutil()
                 response_data = f"Response: Disk Usage = {disk_usage}".encode('utf-8')
 
@@ -347,11 +353,8 @@ try:
                 print("Inchidere...")
                 agent_socket.close()
                 sys.exit(1)
-
-            case _:
-                response_data = f"Eroare: Request necunoscut. {request_msg}".encode('utf-8')
-
-        agent_socket.sendto(response_data, manager_addr)
+        if response_data:
+            agent_socket.sendto(response_data, manager_addr)
         print(f"[SEND] Raspuns trimis catre Manager.")
         
 except KeyboardInterrupt:

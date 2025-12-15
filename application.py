@@ -2,16 +2,17 @@
 import socket
 import select
 import threading
+import time
 from tkinter import *
 
 # configurarea adreselor/porturilot agentilor
-AGENT_1_ADDR = ('10.107.11.160', 161)         #laptop felicia,   ip : 10.107.11.160
-AGENT_2_ADDR = ('10.107.11.199', 161)         #laptop georgiana, ip : 10.107.11.199
+# AGENT_1_ADDR = ('192.168.58.245', 161)         #laptop felicia,   ip : 10.107.11.160
+# AGENT_2_ADDR = ('10.107.11.199', 161)         #laptop georgiana, ip : 10.107.11.199
+discovered_agents = []
 TRAP_PORT = 162
 
 #crearea socket-ului UDP pentru manager
 manager_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-manager_socket.bind(('0.0.0.0', 0)) 
 manager_socket.setblocking(False) 
 
 
@@ -22,14 +23,14 @@ trap_socket.setblocking(False)
 
 # configurarea MIB-ului
 mib = {
-    "1.1.1" : "CPU_Load",
-    "1.1.2" : "CPU_Temperature",
-    "1.1.2.1" : "Temperature_Celsius",
-    "1.1.2.2" : "Temperature_Fahrenheit",
-    "1.1.2.3" : "Temperature_Kelvin",
+    "1.1.1" : "CPU_LOAD",
+    "1.1.2" : "CPU_TEMPERATURE",
+    "1.1.2.1" : "TEMPERATURE_C",
+    "1.1.2.2" : "TEMPERATURE_F",
+    "1.1.2.3" : "TEMPERATURE_K",
     "1.2.1" : "RAM",
-    "1.2.2" : "Disk",
-    "1.3.1" : "Network_Load", 
+    "1.2.2" : "DISK",
+    "1.3.1" : "NETWORK_LOAD", 
     "f.f.f" : "close"
 }
 
@@ -46,6 +47,46 @@ root.title("SNMP v1 - Demonstrative Application")
 auto_refresh = False
 refresh_interval = 10000  # milisecunde (10 secunde)
 
+# folosim discovery pentru a gasi agentii disponibili
+def discover_agents():
+    global discovered_agents
+    
+    add_response_label("[DISCOVERY] Cautare agenti...")
+    
+    disc_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    disc_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    disc_socket.settimeout(0.5)
+    
+    try:
+        # Trimite broadcast
+        disc_socket.sendto("DISCOVERY".encode(), ('10.219.99.255', 161))
+        
+        agents = []
+        start = time.time()
+        
+        # Asteapta raspunsuri timp de 3 secunde
+        while time.time() - start < 3:
+            try:
+                data, addr = disc_socket.recvfrom(1024)
+                if "AGENT" in data.decode() and addr not in agents:
+                    agents.append(addr)
+                    add_response_label(f" Agent: {addr[0]}")
+            except:
+                continue
+        
+        discovered_agents = agents
+        
+        if agents:
+            add_response_label(f"[DISCOVERY] Gasiti {len(agents)} agenti")
+        else:
+            add_response_label("[DISCOVERY] Niciun agent gasit")
+            
+    except Exception as e:
+        add_response_label(f"[ERROR] {e}")
+    finally:
+        disc_socket.close()
+
+
 def auto_update():
     global auto_refresh
     if not auto_refresh:
@@ -55,9 +96,9 @@ def auto_update():
     if oid not in mib:
         add_response_label("[ERROR] OID invalid pentru auto-update")
     else:
-        add_response_label(f"[AUTO] Se trimite cererea: {mib[oid]}...")
-        manager_socket.sendto(mib[oid].encode(), AGENT_1_ADDR)
-        manager_socket.sendto(mib[oid].encode(), AGENT_2_ADDR)
+        for agent in discovered_agents: 
+            add_response_label(f"[AUTO] Se trimite cererea: {mib[oid]}...")
+            manager_socket.sendto(mib[oid].encode(), agent)
 
     root.after(refresh_interval, auto_update)
 
@@ -218,8 +259,8 @@ def sendRequest():
     
     add_response_label(f"Se trimite cererea: {mib[oid]}...")
     
-    manager_socket.sendto(mib[oid].encode('utf-8'), AGENT_1_ADDR)
-    manager_socket.sendto(mib[oid].encode('utf-8'), AGENT_2_ADDR)
+    for agent in discovered_agents: 
+        manager_socket.sendto(mib[oid].encode('utf-8'), agent)
     
     add_response_label("Se asteapta raspunsurile... ")
     
@@ -253,9 +294,9 @@ def SendNextRequest():
     e.insert(0, next_oid)
     
     add_response_label(f"Se trimite urmatoarea cerere: {next_msg}...")
-    
-    manager_socket.sendto(next_msg.encode('utf-8'), AGENT_1_ADDR)
-    manager_socket.sendto(next_msg.encode('utf-8'), AGENT_2_ADDR)
+
+    for agent in discovered_agents: 
+        manager_socket.sendto(next_msg.encode('utf-8'), agent)
     
     add_response_label("Se asteapta raspunsurile... ")
 
@@ -285,8 +326,8 @@ def setRequest():
 
     add_response_label(f"Se trimite setarea: {set_msg}...")
     
-    manager_socket.sendto(set_msg.encode('utf-8'), AGENT_1_ADDR)
-    manager_socket.sendto(set_msg.encode('utf-8'), AGENT_2_ADDR)
+    for agent in discovered_agents: 
+        manager_socket.sendto(set_msg.encode('utf-8'), agent)
     
     add_response_label("Se asteapta confirmarea... ")
 
@@ -294,9 +335,11 @@ def setRequest():
 send_button = Button(frame_up, text="Get Request", font=("Times New Roman", 14), width=20, command=sendRequest)
 next_button = Button(frame_up, text="Get Next Request", font=("Times New Roman", 14), width=20, command=SendNextRequest)
 set_button = Button(frame_up, text="Set Request", font=("Times New Roman", 14), width=20, command=setRequest)
+discover_button = Button(frame_up, text="Discover Agents", font=("Times New Roman", 14), width=20, command=discover_agents)
 send_button.grid(row=0, column=1)
 next_button.grid(row=0, column=2)
 set_button.grid(row=0, column=3)
+discover_button.grid(row=1, column=4)
 
 root.mainloop()
 
@@ -305,3 +348,8 @@ trap_socket.close()
 
 
 
+# TO DO
+# - Aflarea automata a adreselor IP ale agentilor
+# - Inhibarea trap-urilor pana la prima cerere din partea managerului
+# - Error Handling mai bun
+# - Revizuire SetThreshold mai simplu
