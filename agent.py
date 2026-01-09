@@ -70,7 +70,6 @@ def get_cpu_load_psutil():
         print(f"Eroare psutil CPU Load: {e}")
         return "0"
 
-
 # functie pentru obtinerea Network Load folosind psutil
 def get_network_load_psutil():
     try:
@@ -79,14 +78,14 @@ def get_network_load_psutil():
         max_bandwidth = 0
 
         for interface, stats in net_stats.items():
-            # verificam daca interfata este activa
+            #verificam daca interfata este activa
             if stats.isup and stats.speed > 0:
                 # actualizam viteza maxima
                 max_bandwidth = max(max_bandwidth, stats.speed * 1_000_000)
 
         # daca nu se poate determina viteza maxima, presupunem o valoare implicita
         if max_bandwidth == 0:
-            max_bandwidth = 100_000_000  # 100 Mbps
+            max_bandwidth = 100_000_000     # 100 Mbps
 
         # masurarea traficului de retea pe o perioada scurta
         net_io_1 = psutil.net_io_counters()
@@ -94,7 +93,7 @@ def get_network_load_psutil():
         net_io_2 = psutil.net_io_counters()
 
         upload = (net_io_2.bytes_sent - net_io_1.bytes_sent) * 8 / 0.5
-        download = (net_io_2.bytes_recv - net_io_1.bytes_recv) * 8 / 0.5  # b/s
+        download = (net_io_2.bytes_recv - net_io_1.bytes_recv) * 8 / 0.5   # b/s
 
         total_percent = ((upload + download) / (max_bandwidth * 2)) * 100
         total_percent_str = f"{total_percent:.2f}"
@@ -102,7 +101,6 @@ def get_network_load_psutil():
         return total_percent_str
     except Exception as e:
         return f"Eroare: {e}"
-
 
 # functie pentru obtinerea utilizarii RAM folosind WMI
 def get_ram_usage_wmi():
@@ -125,15 +123,14 @@ def get_ram_usage_wmi():
         return None
 
     finally:
-        # eliberarea COM
+        #eliberarea COM
         pythoncom.CoUninitialize()
-
 
 # functie pentru obtinerea utilizarii Disk folosind psutil
 def get_disk_usage_psutil():
     try:
         # functia de obtinere a utilizarii Disk
-        disk_usage = psutil.disk_usage('/')  # folosim '/' pentru path-ul radacina
+        disk_usage = psutil.disk_usage('/')     #folosim '/' pentru path-ul radacina
 
         percent = disk_usage.percent
         disk_usage_str = f"{percent:.2f}"
