@@ -7,7 +7,7 @@ from tkinter import *
 
 
 # configurarea adreselor/porturilot agentilor
-# AGENT_1_ADDR = ('192.168.58.245', 161)         #laptop felicia,   ip : 10.107.11.160
+# AGENT_1_ADDR = ('192.168.58.245', 161)        #laptop felicia,   ip : 10.107.11.160
 # AGENT_2_ADDR = ('10.107.11.199', 161)         #laptop georgiana, ip : 10.107.11.199
 discovered_agents = []
 TRAP_PORT = 162
@@ -348,9 +348,3 @@ manager_socket.close()
 trap_socket.close()
 
 
-
-# TO DO
-# - Aflarea automata a adreselor IP ale agentilor
-# - Inhibarea trap-urilor pana la prima cerere din partea managerului
-# - Error Handling mai bun
-# - Revizuire SetThreshold mai simplu
