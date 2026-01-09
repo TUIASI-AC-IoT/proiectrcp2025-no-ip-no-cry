@@ -515,6 +515,19 @@ _b) Intrare în MIB pentru unitatea de măsură_
 
 
 
+    ** Metoda DISCOVERY **
+ 
+În scopul identificării automate a adreselor agenților disponibili în rețea, la nivelul codului s-a implementat funcția discover_agents() utilizând mecanismul de UDP broadcast. 
+Aceasta creează un socket UDP configurat cu opțiunea SO_BROADCAST pentru a permite trimiterea  unui mesaj de tip DISCOVERY către adresa de broadcast a subrețelei(10.219.99.255) pe portul 161. Agenții din rețea, care asculă pe acest port, răspund cu un mesaj ce conține identificatorul "AGENT".
+
+Funcția preia aceste răspunsuri într-un interval de timp prestabilit (3 secunde în cazul nostru) și extrage automat adresele IP și porturile agenților din informațiile de tip addr returnate de socket. 
+Adresele descoperite sunt stocate în variabila globală discovered_agents, pentru a fi utilizate ulterior de restul aplicației. 
+
+
+
+
+
+
 
 
 		Imaginile de mai jos ne oferă o viziune pe ansamblu a protocolului studiat numit SNMP 
