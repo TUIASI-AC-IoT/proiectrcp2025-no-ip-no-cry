@@ -231,6 +231,47 @@ def send_trap(specific, description, value, manager_addr):
     print(f"[TRAP SENT] {trap}")
 
 
+# Functie pentru monitorizarea pragurilor
+def monitorizare_thresholds(manager_addr):
+    while True :
+        try:
+            with threshold_lock:
+                cpu_threshold = THRESHOLD_CPU_LOAD
+                ram_threshold = THRESHOLD_RAM
+                disk_threshold = THRESHOLD_DISK
+                temp_threshold_c = THRESHOLD_CPU_TEMP_C
+                net_threshold = THRESHOLD_NET_LOAD
+
+            #CPU LOAD
+            cpu_val = round(float(get_cpu_load_psutil()),2)
+            if cpu_val > cpu_threshold:
+                send_trap(2, "CPU load depaseste pragul", cpu_val, manager_addr)
+
+            #RAM
+            ram = round(float(get_ram_usage_wmi()),2)
+            if ram > ram_threshold:
+                send_trap(3, "RAM peste prag", ram, manager_addr)
+
+            # DISK
+            disk = round(float(get_disk_usage_psutil()), 2)
+            if disk > disk_threshold:
+                send_trap(4, "Disk aproape plin", disk, manager_addr)
+
+            # TEMP
+            temp_c = round(float(get_cpu_temp_wmi("Celsius")), 2)
+            if temp_c > temp_threshold_c:
+                send_trap(1, "Temperatura CPU ridicata", temp_c, manager_addr)
+
+            # NETWORK LOAD
+            net = round(float(get_network_load_psutil()), 2)
+            if net > net_threshold:
+                send_trap(5, "Reteaua este congestionata", net, manager_addr)
+
+            time.sleep(10)
+        except Exception as e:
+            time.sleep(10)
+
+
 
 print(f"Agent IP: {AGENT_IP}")
 
