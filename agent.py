@@ -6,6 +6,54 @@ import psutil
 import time
 import threading
 import pythoncom
+import traceback
+import datetime
+
+
+## HANDLER PENTRU ERORI
+# context = functia/modulul unde a aparut eroarea
+#notifica_manager = ne indica daca eroarea trebuie raportata catre manager (prin trap)
+# manager_addr = adresa managerului care primeste trap-ul
+
+def error_handler ( context, exception, notifica_manager=False, manager_addr=None):
+    """
+    Handler de erori pentru Agent/Manger SNMP
+
+    :param context: locul unde a aparut eroarea( ex: 'NETWORK_LOAD')
+    :param exception: exceptia prinsa (e)
+    :param notifica_manager: trimite trap-ul catre manager (Tue/False)
+    :param manager_addr: adresa managerului (ip, port)
+    """
+
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d  %H:%M:%S")
+    error_type = type(exception).__name__
+    error_msg = str(exception)
+
+    message = (
+        f"[ERROR] [{timestamp}] "
+        f"Context :{context} | "
+        f"Tip : {error_type}| "
+        f"Message : {error_msg}"
+    )
+    print(message)
+    traceback.print_exc()
+
+    #notifica manager-ul prin trap
+    if notifica_manager and manager_addr :
+        try:
+            #utilizam codul de trap specific pt erori
+            send_trap(99,
+                      description =f"Eroare in blocul :{context}",
+                      value=error_msg,
+                      manager_addr=manager_addr)
+
+        except Exception as trap_err:
+            print(f"[ERROR] Nu s-a putut trimite trap-ul de eroare :{trap_err}")
+
+
+
+
+
 
 # funnctie pentru obtinerea adresei IP a fiecarui agent(laptop)
 def get_wifi_ip():
@@ -54,6 +102,7 @@ def get_cpu_temp_wmi(tip = "Celsius"):
         return temp_str
 
     except Exception as e:
+        error_handler("CPU_TEMPERATURE", e)
         return None
 
     finally:
@@ -67,7 +116,8 @@ def get_cpu_load_psutil():
         cpu_load = psutil.cpu_percent(interval=1) # Măsurare pe 1 secundă
         return f"{cpu_load:.2f}"
     except Exception as e:
-        print(f"Eroare psutil CPU Load: {e}")
+        #print(f"Eroare psutil CPU Load: {e}")
+        error_handler("CPU_LOAD", e)
         return "0"
 
 # functie pentru obtinerea Network Load folosind psutil
@@ -100,7 +150,8 @@ def get_network_load_psutil():
 
         return total_percent_str
     except Exception as e:
-        return f"Eroare: {e}"
+        error_handler("NETWORK_LOAD", e)
+        return "0"
 
 # functie pentru obtinerea utilizarii RAM folosind WMI
 def get_ram_usage_wmi():
@@ -120,6 +171,7 @@ def get_ram_usage_wmi():
         return ram_usage_str
 
     except Exception as e:
+        error_handler("RAM_USAGE", e)
         return None
 
     finally:
@@ -136,7 +188,8 @@ def get_disk_usage_psutil():
         disk_usage_str = f"{percent:.2f}"
         return disk_usage_str
     except Exception as e:
-        return f"Eroare: {e}"
+        error_handler("DISK_USAGE", e)
+        return None
 
 
 # definirea adreselor si porturilor agentilor
@@ -208,27 +261,34 @@ def set_thresholds_from_manager(lista):
         print(f" NET={THRESHOLD_NET_LOAD}%")
 
     except Exception as e:
-        print(f"Eroare la setarea pragurilor: {e}")
+        error_handler("SET_THRESHOLD", e)
+        #print(f"Eroare la setarea pragurilor: {e}")
 
 
  ## Functie pentru trimiterea trap-urilor
 def send_trap(specific, description, value, manager_addr):
-    trap = (
-        f"SNMPv1-TRAP | "
-        f"Enterprise={ENTERPRISE_OID} | "
-        f"Agent={AGENT_IP} | "
-        f"Generic=6 | "
-        f"Specific={specific} | "
-        f"{description} | "
-        f"Value={value}"
-    )
+    try :
+        trap = (
+            f"SNMPv1-TRAP | "
+            f"Enterprise={ENTERPRISE_OID} | "
+            f"Agent={AGENT_IP} | "
+            f"Generic=6 | "
+            f"Specific={specific} | "
+            f"{description} | "
+            f"Value={value}"
+        )
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    trap_manager = (manager_addr[0], 162)
-    s.sendto(trap.encode(), trap_manager)
-    s.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        trap_manager = (manager_addr[0], 162)
+        s.sendto(trap.encode(), trap_manager)
+        s.close()
 
-    print(f"[TRAP SENT] {trap}")
+        print(f"[TRAP SENT] {trap}")
+
+    except Exception as e:
+        error_handler("SEND_TRAP", e)
+
+
 
 
 # Functie pentru monitorizarea pragurilor
@@ -269,6 +329,13 @@ def monitorizare_thresholds(manager_addr):
 
             time.sleep(10)
         except Exception as e:
+            #maangerul va primi trap de eroare, nu doar de depasire a unui anumit prag
+            error_handler(
+                context="THRESHOLD_MONITOR",
+                exception = e,
+                notifica_manager = True,
+                manager_addr = manager_addr)
+
             time.sleep(10)
 
 
@@ -292,67 +359,85 @@ monitoring_started = False
 try:
     # Bucla principala de asteptare
     while True:
-        data, manager_addr = agent_socket.recvfrom(1024)
+        try:
+            data, manager_addr = agent_socket.recvfrom(1024)
+            response_data = None
+            if not monitoring_started:
+                threading.Thread(target=monitorizare_thresholds, args = (manager_addr,), daemon=True).start()
+                monitoring_started = True
 
-        if not monitoring_started:
-            threading.Thread(target=monitorizare_thresholds, args = (manager_addr,), daemon=True).start()
-            monitoring_started = True
-        
-        request_msg = data.decode().strip()
-        print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
+            request_msg = data.decode().strip()
+            print(f"\n[RECV] Cerere de la Manager ({manager_addr}): {request_msg}")
 
-        match request_msg:
-            case "DISCOVERY":
-                response_data = "Response: AGENT READY".encode('utf-8')
+            match request_msg:
+                case "DISCOVERY":
+                    response_data = "Response: AGENT READY".encode('utf-8')
 
-            case "CPU_TEMPERATURE":
-                temp = get_cpu_temp_wmi("Celsius")
-                response_data = f"Response: CPU Temperature(default - Celsius) = {temp}".encode('utf-8')
+                case "CPU_TEMPERATURE":
+                    temp = get_cpu_temp_wmi("Celsius")
+                    response_data = f"Response: CPU Temperature(default - Celsius) = {temp}".encode('utf-8')
 
-            case "TEMPERATURE_C":
-                temp = get_cpu_temp_wmi("Celsius")
-                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+                case "TEMPERATURE_C":
+                    temp = get_cpu_temp_wmi("Celsius")
+                    response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "TEMPERATURE_F":
-                temp = get_cpu_temp_wmi("Fahrenheit")
-                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+                case "TEMPERATURE_F":
+                    temp = get_cpu_temp_wmi("Fahrenheit")
+                    response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "TEMPERATURE_K":
-                temp = get_cpu_temp_wmi("Kelvin")
-                response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
+                case "TEMPERATURE_K":
+                    temp = get_cpu_temp_wmi("Kelvin")
+                    response_data = f"Response: CPU Temperature = {temp}".encode('utf-8')
 
-            case "CPU_LOAD":
-                cpu_load = get_cpu_load_psutil()
-                response_data = f"Response: CPU Load = {cpu_load}".encode('utf-8')
+                case "CPU_LOAD":
+                    cpu_load = get_cpu_load_psutil()
+                    response_data = f"Response: CPU Load = {cpu_load}".encode('utf-8')
 
-            case "NETWORK_LOAD":
-                net_load = get_network_load_psutil()
-                response_data = f"Response: Network Load:  {net_load}".encode('utf-8')
+                case "NETWORK_LOAD":
+                    net_load = get_network_load_psutil()
+                    response_data = f"Response: Network Load:  {net_load}".encode('utf-8')
 
-            case "RAM":
-                ram_usage = get_ram_usage_wmi()
-                response_data = f"Response: RAM Usage = {ram_usage}".encode('utf-8')
+                case "RAM":
+                    ram_usage = get_ram_usage_wmi()
+                    response_data = f"Response: RAM Usage = {ram_usage}".encode('utf-8')
 
-            case "DISK":
-                disk_usage = get_disk_usage_psutil()
-                response_data = f"Response: Disk Usage = {disk_usage}".encode('utf-8')
+                case "DISK":
+                    disk_usage = get_disk_usage_psutil()
+                    response_data = f"Response: Disk Usage = {disk_usage}".encode('utf-8')
 
-            case _ if request_msg.startswith("SET THRESHOLD"):
-                parts = request_msg.replace("SET THRESHOLD", "").strip().split("=")
-                key = parts[0].strip()
-                value = parts[1].strip()
-                set_thresholds_from_manager([(key, value)])
-                response_data = b"Threshold-uri actualizate cu succes"
+                case _ if request_msg.startswith("SET THRESHOLD"):
+                    parts = request_msg.replace("SET THRESHOLD", "").strip().split("=")
+                    key = parts[0].strip()
+                    value = parts[1].strip()
+                    set_thresholds_from_manager([(key, value)])
+                    response_data = b"Threshold-uri actualizate cu succes"
 
-            case "close":
-                print("Inchidere...")
-                agent_socket.close()
-                sys.exit(1)
-        if response_data:
-            agent_socket.sendto(response_data, manager_addr)
-        print(f"[SEND] Raspuns trimis catre Manager.")
+                case "close":
+                    print("Inchidere...")
+                    agent_socket.close()
+                    sys.exit(1)
+            if response_data:
+                agent_socket.sendto(response_data, manager_addr)
+            print(f"[SEND] Raspuns trimis catre Manager.")
+
+        except Exception as e :
+                error_handler(
+                    context= "AGENT_MAIN_LOOP",
+                    exception=e,
+                    notifica_manager=True,
+                    manager_addr=manager_addr
+                )
         
 except KeyboardInterrupt:
     print("\nAgent oprit de utilizator.")
     agent_socket.close()
     print("Agentul s-a inchis.")
+
+
+
+
+
+
+
+
+
