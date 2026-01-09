@@ -5,6 +5,7 @@ import threading
 import time
 from tkinter import *
 
+
 # configurarea adreselor/porturilot agentilor
 # AGENT_1_ADDR = ('192.168.58.245', 161)         #laptop felicia,   ip : 10.107.11.160
 # AGENT_2_ADDR = ('10.107.11.199', 161)         #laptop georgiana, ip : 10.107.11.199
