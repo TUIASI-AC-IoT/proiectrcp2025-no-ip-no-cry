@@ -11,9 +11,9 @@ import datetime
 
 
 ## HANDLER PENTRU ERORI
-# context = functia/modulul unde a aparut eroarea
-#notifica_manager = ne indica daca eroarea trebuie raportata catre manager (prin trap)
-# manager_addr = adresa managerului care primeste trap-ul
+    # context = functia/modulul unde a aparut eroarea
+    # notifica_manager = ne indica daca eroarea trebuie raportata catre manager (prin trap)
+    # manager_addr = adresa managerului care primeste trap-ul
 
 def error_handler ( context, exception, notifica_manager=False, manager_addr=None):
     """
@@ -32,8 +32,8 @@ def error_handler ( context, exception, notifica_manager=False, manager_addr=Non
     message = (
         f"[ERROR] [{timestamp}] "
         f"Context :{context} | "
-        f"Tip : {error_type}| "
-        f"Message : {error_msg}"
+        f"Tip :{error_type}| "
+        f"Message :{error_msg}"
     )
     print(message)
     traceback.print_exc()
@@ -52,9 +52,6 @@ def error_handler ( context, exception, notifica_manager=False, manager_addr=Non
 
 
 
-
-
-
 # funnctie pentru obtinerea adresei IP a fiecarui agent(laptop)
 def get_wifi_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -66,6 +63,7 @@ def get_wifi_ip():
     finally:
         s.close()
     return ip
+
 
 # functia pentru obtinerea temperaturii CPU folosind WMI
 def get_cpu_temp_wmi(tip = "Celsius"):
@@ -113,7 +111,7 @@ def get_cpu_temp_wmi(tip = "Celsius"):
 def get_cpu_load_psutil():
     try:
         # psutil.cpu_percent() returneaza procentajul de utilizare CPU
-        cpu_load = psutil.cpu_percent(interval=1) # Măsurare pe 1 secundă
+        cpu_load = psutil.cpu_percent(interval=1) # masurare  pe 1 secundă
         return f"{cpu_load:.2f}"
     except Exception as e:
         #print(f"Eroare psutil CPU Load: {e}")
